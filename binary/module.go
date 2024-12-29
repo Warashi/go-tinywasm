@@ -1,7 +1,6 @@
 package binary
 
 import (
-	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -42,7 +41,7 @@ func decode(r io.Reader) (*Module, error) {
 			return nil, fmt.Errorf("failed to decode section header: %w", err)
 		}
 
-		sectionContents, err := take(int(size))(r)
+		sectionContents, err := take(size)(r)
 		if err != nil {
 			return nil, fmt.Errorf("failed to take section contents: %w", err)
 		}
@@ -194,7 +193,7 @@ func decodeCodeSection(r io.Reader) ([]Function, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to read function size: %w", err)
 		}
-		body, err := take(int(size))(r)
+		body, err := take(size)(r)
 		if err != nil {
 			return nil, fmt.Errorf("failed to take function body: %w", err)
 		}
@@ -240,34 +239,4 @@ func decodeFunctionBody(r io.Reader) (Function, error) {
 
 	// TODO: decode instructions
 	return Function{locals: locals}, nil
-}
-
-func take(n int) func(r io.Reader) (io.Reader, error) {
-	return func(r io.Reader) (io.Reader, error) {
-		b := make([]byte, n)
-		if _, err := io.ReadFull(r, b); err != nil {
-			return nil, fmt.Errorf("failed to read %d bytes: %w", n, err)
-		}
-		return bytes.NewReader(b), nil
-	}
-}
-
-func many0[T any](f func(io.Reader) (T, error)) func(io.Reader) ([]T, error) {
-	return func(r io.Reader) ([]T, error) {
-		var (
-			ts []T
-		)
-		for {
-			t, err := f(r)
-			if err != nil {
-				if errors.Is(err, io.EOF) {
-					break
-				}
-				var zero T
-				return nil, fmt.Errorf("failed to read %T: %w", zero, err)
-			}
-			ts = append(ts, t)
-		}
-		return ts, nil
-	}
 }
