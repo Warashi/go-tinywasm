@@ -2,6 +2,7 @@ package binary
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 
@@ -21,6 +22,26 @@ func decode(r io.Reader) (*Module, error) {
 	magic, version, err := decodePreamble(r)
 	if err != nil {
 		return nil, err
+	}
+
+	for {
+		code, size, err := decodeSectionHeader(r)
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return nil, fmt.Errorf("failed to decode section header: %w", err)
+		}
+
+		section := make([]byte, size)
+		if _, err := io.ReadFull(r, section); err != nil {
+			return nil, fmt.Errorf("failed to read section: %w", err)
+		}
+
+		switch code {
+		default:
+			return nil, fmt.Errorf("unsupported section code: %d", code)
+		}
 	}
 
 	return &Module{
