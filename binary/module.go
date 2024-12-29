@@ -4,6 +4,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+
+	"github.com/Warashi/go-tinywasm/leb128"
 )
 
 type Module struct {
@@ -43,4 +45,20 @@ func decodePreamble(r io.Reader) (string, uint32, error) {
 	}
 
 	return string(magic[:]), binary.LittleEndian.Uint32(version[:]), nil
+}
+
+func decodeSectionHeader(r io.Reader) (SectionCode, uint32, error) {
+	var (
+		code [1]byte
+	)
+	if _, err := io.ReadFull(r, code[:]); err != nil {
+		return 0, 0, fmt.Errorf("failed to read section code: %w", err)
+	}
+
+	size, err := leb128.Uint32(r)
+	if err != nil {
+		return 0, 0, fmt.Errorf("failed to read section size: %w", err)
+	}
+
+	return SectionCode(code[0]), size, nil
 }
