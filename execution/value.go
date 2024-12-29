@@ -38,27 +38,26 @@ func ValueFrom(v any) (Value, error) {
 
 type Value interface {
 	Type() ValueType
-	Add(Value) (Value, error)
 }
 
 type I32 int32
 
 func (I32) Type() ValueType { return ValueTypeI32 }
 
-func (i I32) Add(v Value) (Value, error) {
-	if v.Type() != ValueTypeI32 {
-		return nil, fmt.Errorf("type mismatch: expected I32, got %v", v.Type())
-	}
-	return i + v.(I32), nil
-}
-
 type I64 int64
 
 func (I64) Type() ValueType { return ValueTypeI64 }
 
-func (i I64) Add(v Value) (Value, error) {
-	if v.Type() != ValueTypeI64 {
-		return nil, fmt.Errorf("type mismatch: expected I64, got %v", v.Type())
+func Add(a, b Value) (Value, error) {
+	if a.Type() != b.Type() {
+		return nil, fmt.Errorf("type mismatch: %v + %v", a.Type(), b.Type())
 	}
-	return i + v.(I64), nil
+	switch a := a.(type) {
+	case I32:
+		return I32(a + b.(I32)), nil
+	case I64:
+		return I64(a + b.(I64)), nil
+	}
+
+	return nil, fmt.Errorf("unsupported type %T", a)
 }

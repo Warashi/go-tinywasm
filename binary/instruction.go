@@ -13,8 +13,8 @@ type Instruction interface {
 
 type InstructionEnd struct{}
 
-func (InstructionEnd) Opcode() Opcode             { return OpcodeEnd }
-func (InstructionEnd) ReadFrom(r io.Reader) error { return nil }
+func (InstructionEnd) Opcode() Opcode           { return OpcodeEnd }
+func (InstructionEnd) ReadFrom(io.Reader) error { return nil }
 
 type InstructionLocalGet struct{ idx uint32 }
 
@@ -27,5 +27,5 @@ func (i *InstructionLocalGet) ReadFrom(r io.Reader) error {
 
 type InstructionI32Add struct{}
 
-func (InstructionI32Add) Opcode() Opcode             { return OpcodeI32Add }
-func (InstructionI32Add) ReadFrom(r io.Reader) error { return nil }
+func (InstructionI32Add) Opcode() Opcode           { return OpcodeI32Add }
+func (InstructionI32Add) ReadFrom(io.Reader) error { return nil }
