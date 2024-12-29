@@ -185,7 +185,29 @@ func decodeFunctionSection(r io.Reader) ([]uint32, error) {
 }
 
 func decodeCodeSection(r io.Reader) ([]Function, error) {
-	return nil, nil
+	count, err := leb128.Uint32(r)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read function count: %w", err)
+	}
+
+	functions := make([]Function, 0, count)
+	for range count {
+		size, err := leb128.Uint32(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read function size: %w", err)
+		}
+		body, err := take(int(size))(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to take function body: %w", err)
+		}
+		f, err := decodeFunctionBody(body)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode function body: %w", err)
+		}
+		functions = append(functions, f)
+	}
+
+	return functions, nil
 }
 
 func decodeValueType(r io.Reader) (ValueType, error) {
@@ -194,4 +216,57 @@ func decodeValueType(r io.Reader) (ValueType, error) {
 		return 0, fmt.Errorf("failed to read value type: %w", err)
 	}
 	return ValueType(b), nil
+}
+
+func decodeFunctionBody(r io.Reader) (Function, error) {
+	count, err := leb128.Uint32(r)
+	if err != nil {
+		return Function{}, fmt.Errorf("failed to read local count: %w", err)
+	}
+
+	locals := make([]FunctionLocal, 0, count)
+	for range count {
+		typeCount, err := leb128.Uint32(r)
+		if err != nil {
+			return Function{}, fmt.Errorf("failed to read type count: %w", err)
+		}
+		valueType, err := decodeValueType(r)
+		if err != nil {
+			return Function{}, fmt.Errorf("failed to decode value type: %w", err)
+		}
+		locals = append(locals, FunctionLocal{typeCount: typeCount, valueType: valueType})
+	}
+
+	// TODO: decode instructions
+	return Function{locals: locals}, nil
+}
+
+func take(n int) func(r io.Reader) (io.Reader, error) {
+	return func(r io.Reader) (io.Reader, error) {
+		b := make([]byte, n)
+		if _, err := io.ReadFull(r, b); err != nil {
+			return nil, fmt.Errorf("failed to read %d bytes: %w", n, err)
+		}
+		return bytes.NewReader(b), nil
+	}
+}
+
+func many0[T any](f func(io.Reader) (T, error)) func(io.Reader) ([]T, error) {
+	return func(r io.Reader) ([]T, error) {
+		var (
+			ts []T
+		)
+		for {
+			t, err := f(r)
+			if err != nil {
+				if errors.Is(err, io.EOF) {
+					break
+				}
+				var zero T
+				return nil, fmt.Errorf("failed to read %T: %w", zero, err)
+			}
+			ts = append(ts, t)
+		}
+		return ts, nil
+	}
 }
