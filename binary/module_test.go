@@ -53,6 +53,12 @@ func TestDecodeMinimalFunc(t *testing.T) {
 			},
 		},
 		functionSection: []uint32{0},
+		codeSection: []Function{
+			{
+				locals: []FunctionLocal{},
+				code:   []Instruction{InstructionEnd},
+			},
+		},
 	}
 	if !reflect.DeepEqual(want, got) {
 		t.Errorf("unexpected module: %#v", got)
@@ -83,6 +89,12 @@ func TestDecodeFuncParam(t *testing.T) {
 			},
 		},
 		functionSection: []uint32{0},
+		codeSection: []Function{
+			{
+				locals: []FunctionLocal{},
+				code:   []Instruction{InstructionEnd},
+			},
+		},
 	}
 
 	if !reflect.DeepEqual(want, got) {
@@ -120,6 +132,7 @@ func TestDecodeFuncLocal(t *testing.T) {
 					{typeCount: 1, valueType: ValueTypeI32},
 					{typeCount: 2, valueType: ValueTypeI64},
 				},
+				code: []Instruction{InstructionEnd},
 			},
 		},
 	}

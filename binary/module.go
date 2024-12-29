@@ -42,26 +42,24 @@ func decode(r io.Reader) (*Module, error) {
 			return nil, fmt.Errorf("failed to decode section header: %w", err)
 		}
 
-		sectionContents := make([]byte, size)
-		if _, err := io.ReadFull(r, sectionContents); err != nil {
-			return nil, fmt.Errorf("failed to read section: %w", err)
+		sectionContents, err := take(int(size))(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to take section contents: %w", err)
 		}
-
-		section := bytes.NewReader(sectionContents)
 
 		switch code {
 		case SectionCodeType:
-			module.typeSection, err = decodeTypeSection(section)
+			module.typeSection, err = decodeTypeSection(sectionContents)
 			if err != nil {
 				return nil, fmt.Errorf("failed to decode type section: %w", err)
 			}
 		case SectionCodeFunction:
-			module.functionSection, err = decodeFunctionSection(section)
+			module.functionSection, err = decodeFunctionSection(sectionContents)
 			if err != nil {
 				return nil, fmt.Errorf("failed to decode function section: %w", err)
 			}
 		case SectionCodeCode:
-			module.codeSection, err = decodeCodeSection(section)
+			module.codeSection, err = decodeCodeSection(sectionContents)
 			if err != nil {
 				return nil, fmt.Errorf("failed to decode code section: %w", err)
 			}
@@ -204,6 +202,9 @@ func decodeCodeSection(r io.Reader) ([]Function, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to decode function body: %w", err)
 		}
+
+		f.code = []Instruction{InstructionEnd}
+
 		functions = append(functions, f)
 	}
 
