@@ -73,6 +73,16 @@ func decode(r io.Reader) (*Module, error) {
 	return module, nil
 }
 
+func readByte(r io.Reader) (byte, error) {
+	var (
+		b [1]byte
+	)
+	if _, err := io.ReadFull(r, b[:]); err != nil {
+		return 0, fmt.Errorf("failed to read byte: %w", err)
+	}
+	return b[0], nil
+}
+
 func decodePreamble(r io.Reader) (string, uint32, error) {
 	var (
 		magic   [4]byte
@@ -92,10 +102,8 @@ func decodePreamble(r io.Reader) (string, uint32, error) {
 }
 
 func decodeSectionHeader(r io.Reader) (SectionCode, uint32, error) {
-	var (
-		code [1]byte
-	)
-	if _, err := io.ReadFull(r, code[:]); err != nil {
+	code, err := readByte(r)
+	if err != nil {
 		return 0, 0, fmt.Errorf("failed to read section code: %w", err)
 	}
 
@@ -104,11 +112,57 @@ func decodeSectionHeader(r io.Reader) (SectionCode, uint32, error) {
 		return 0, 0, fmt.Errorf("failed to read section size: %w", err)
 	}
 
-	return SectionCode(code[0]), size, nil
+	return SectionCode(code), size, nil
 }
 
 func decodeTypeSection(r io.Reader) ([]FuncType, error) {
-	return nil, nil
+	count, err := leb128.Uint32(r)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read type section count: %w", err)
+	}
+
+	funcTypes := make([]FuncType, 0, count)
+	for range count {
+		f, err := readByte(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read function type: %w", err)
+		}
+		if f != 0x60 {
+			return nil, fmt.Errorf("unsupported function type: %x", f)
+		}
+
+		paramCount, err := leb128.Uint32(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read parameter count: %w", err)
+		}
+
+		params := make([]ValueType, 0, paramCount)
+		for range paramCount {
+			v, err := decodeValueType(r)
+			if err != nil {
+				return nil, fmt.Errorf("failed to decode parameter type: %w", err)
+			}
+			params = append(params, v)
+		}
+
+		resultCount, err := leb128.Uint32(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read result count: %w", err)
+		}
+
+		results := make([]ValueType, 0, resultCount)
+		for range resultCount {
+			v, err := decodeValueType(r)
+			if err != nil {
+				return nil, fmt.Errorf("failed to decode result type: %w", err)
+			}
+			results = append(results, v)
+		}
+
+		funcTypes = append(funcTypes, FuncType{params: params, results: results})
+	}
+
+	return funcTypes, nil
 }
 
 func decodeFunctionSection(r io.Reader) ([]uint32, error) {
@@ -132,4 +186,12 @@ func decodeFunctionSection(r io.Reader) ([]uint32, error) {
 
 func decodeCodeSection(r io.Reader) ([]Function, error) {
 	return nil, nil
+}
+
+func decodeValueType(r io.Reader) (ValueType, error) {
+	b, err := readByte(r)
+	if err != nil {
+		return 0, fmt.Errorf("failed to read value type: %w", err)
+	}
+	return ValueType(b), nil
 }
