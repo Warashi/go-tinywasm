@@ -11,9 +11,10 @@ import (
 )
 
 type Module struct {
-	magic   string
-	version uint32
-	types   []FuncType
+	magic           string
+	version         uint32
+	typeSection     []FuncType
+	functionSection []uint32
 }
 
 func NewModule(r io.Reader) (*Module, error) {
@@ -49,11 +50,15 @@ func decode(r io.Reader) (*Module, error) {
 
 		switch code {
 		case SectionCodeType:
-			module.types, err = decodeTypeSection(section)
+			module.typeSection, err = decodeTypeSection(section)
 			if err != nil {
 				return nil, fmt.Errorf("failed to decode type section: %w", err)
 			}
-
+		case SectionCodeFunction:
+			module.functionSection, err = decodeFunctionSection(section)
+			if err != nil {
+				return nil, fmt.Errorf("failed to decode function section: %w", err)
+			}
 		default:
 			return nil, fmt.Errorf("unsupported section code: %d", code)
 		}
@@ -98,4 +103,23 @@ func decodeSectionHeader(r io.Reader) (SectionCode, uint32, error) {
 
 func decodeTypeSection(r io.Reader) ([]FuncType, error) {
 	return nil, nil
+}
+
+func decodeFunctionSection(r io.Reader) ([]uint32, error) {
+	count, err := leb128.Uint32(r)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read function count: %w", err)
+	}
+
+	idxs := make([]uint32, 0, count)
+
+	for range count {
+		idx, err := leb128.Uint32(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read function index: %w", err)
+		}
+		idxs = append(idxs, idx)
+	}
+
+	return idxs, nil
 }
