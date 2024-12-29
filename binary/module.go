@@ -1,6 +1,7 @@
 package binary
 
 import (
+	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -12,6 +13,7 @@ import (
 type Module struct {
 	magic   string
 	version uint32
+	types   []FuncType
 }
 
 func NewModule(r io.Reader) (*Module, error) {
@@ -19,7 +21,12 @@ func NewModule(r io.Reader) (*Module, error) {
 }
 
 func decode(r io.Reader) (*Module, error) {
-	magic, version, err := decodePreamble(r)
+	var (
+		err    error
+		module = new(Module)
+	)
+
+	module.magic, module.version, err = decodePreamble(r)
 	if err != nil {
 		return nil, err
 	}
@@ -33,21 +40,26 @@ func decode(r io.Reader) (*Module, error) {
 			return nil, fmt.Errorf("failed to decode section header: %w", err)
 		}
 
-		section := make([]byte, size)
-		if _, err := io.ReadFull(r, section); err != nil {
+		sectionContents := make([]byte, size)
+		if _, err := io.ReadFull(r, sectionContents); err != nil {
 			return nil, fmt.Errorf("failed to read section: %w", err)
 		}
 
+		section := bytes.NewReader(sectionContents)
+
 		switch code {
+		case SectionCodeType:
+			module.types, err = decodeTypeSection(section)
+			if err != nil {
+				return nil, fmt.Errorf("failed to decode type section: %w", err)
+			}
+
 		default:
 			return nil, fmt.Errorf("unsupported section code: %d", code)
 		}
 	}
 
-	return &Module{
-		magic:   magic,
-		version: version,
-	}, nil
+	return module, nil
 }
 
 func decodePreamble(r io.Reader) (string, uint32, error) {
@@ -82,4 +94,8 @@ func decodeSectionHeader(r io.Reader) (SectionCode, uint32, error) {
 	}
 
 	return SectionCode(code[0]), size, nil
+}
+
+func decodeTypeSection(r io.Reader) ([]FuncType, error) {
+	return nil, nil
 }
