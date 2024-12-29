@@ -28,7 +28,7 @@ func (f *InternalFuncInst) Call() error {
 	panic("not implemented")
 }
 
-func NewStore(module *binary.Module) *Store {
+func NewStore(module *binary.Module) (*Store, error) {
 	var funcs []FuncInst
 
 	for body, typeIdx := range zipSlice(module.CodeSection(), module.FunctionSection()) {
@@ -53,7 +53,7 @@ func NewStore(module *binary.Module) *Store {
 
 	return &Store{
 		funcs: funcs,
-	}
+	}, nil
 }
 
 func zipSlice[A, B any, SA ~[]A, SB ~[]B](a SA, b SB) iter.Seq2[A, B] {
