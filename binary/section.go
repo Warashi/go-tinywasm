@@ -16,3 +16,8 @@ const (
 	SectionCodeCode
 	SectionCodeData
 )
+
+type Function struct {
+	locals []FunctionLocal
+	code   []Instruction
+}

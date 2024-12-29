@@ -11,3 +11,8 @@ const (
 	ValueTypeI32 ValueType = 0x7f
 	ValueTypeI64 ValueType = 0x7e
 )
+
+type FunctionLocal struct {
+	typeCount uint32
+	valueType ValueType
+}

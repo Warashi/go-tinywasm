@@ -15,6 +15,7 @@ type Module struct {
 	version         uint32
 	typeSection     []FuncType
 	functionSection []uint32
+	codeSection     []Function
 }
 
 func NewModule(r io.Reader) (*Module, error) {
@@ -58,6 +59,11 @@ func decode(r io.Reader) (*Module, error) {
 			module.functionSection, err = decodeFunctionSection(section)
 			if err != nil {
 				return nil, fmt.Errorf("failed to decode function section: %w", err)
+			}
+		case SectionCodeCode:
+			module.codeSection, err = decodeCodeSection(section)
+			if err != nil {
+				return nil, fmt.Errorf("failed to decode code section: %w", err)
 			}
 		default:
 			return nil, fmt.Errorf("unsupported section code: %d", code)
@@ -122,4 +128,8 @@ func decodeFunctionSection(r io.Reader) ([]uint32, error) {
 	}
 
 	return idxs, nil
+}
+
+func decodeCodeSection(r io.Reader) ([]Function, error) {
+	return nil, nil
 }
