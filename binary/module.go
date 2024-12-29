@@ -202,8 +202,6 @@ func decodeCodeSection(r io.Reader) ([]Function, error) {
 			return nil, fmt.Errorf("failed to decode function body: %w", err)
 		}
 
-		f.code = []Instruction{InstructionEnd}
-
 		functions = append(functions, f)
 	}
 
@@ -238,5 +236,5 @@ func decodeFunctionBody(r io.Reader) (Function, error) {
 	}
 
 	// TODO: decode instructions
-	return Function{locals: locals}, nil
+	return Function{locals: locals, code: []Instruction{InstructionEnd}}, nil
 }
