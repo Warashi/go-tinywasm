@@ -12,7 +12,11 @@ type Module struct {
 }
 
 func NewModule(r io.Reader) (*Module, error) {
-	magic, version, err := parsePreamble(r)
+	return decode(r)
+}
+
+func decode(r io.Reader) (*Module, error) {
+	magic, version, err := decodePreamble(r)
 	if err != nil {
 		return nil, err
 	}
@@ -23,7 +27,7 @@ func NewModule(r io.Reader) (*Module, error) {
 	}, nil
 }
 
-func parsePreamble(r io.Reader) (string, uint32, error) {
+func decodePreamble(r io.Reader) (string, uint32, error) {
 	var (
 		magic   [4]byte
 		version [4]byte
@@ -39,5 +43,4 @@ func parsePreamble(r io.Reader) (string, uint32, error) {
 	}
 
 	return string(magic[:]), binary.LittleEndian.Uint32(version[:]), nil
-
 }
