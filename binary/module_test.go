@@ -141,3 +141,45 @@ func TestDecodeFuncLocal(t *testing.T) {
 		t.Errorf("unexpected module: %#v", got)
 	}
 }
+
+func TestDecodeFuncAdd(t *testing.T) {
+	t.Parallel()
+
+	b, err := os.ReadFile("../testdata/func_add.wasm")
+	if err != nil {
+		t.Errorf("failed to load testdata: %v", err)
+		t.FailNow()
+	}
+
+	got, err := NewModule(bytes.NewReader(b))
+	if err != nil {
+		t.Errorf("failed to parse wasm: %v", err)
+	}
+
+	want := &Module{
+		magic:   "\x00asm",
+		version: 1,
+		typeSection: []FuncType{
+			{
+				params:  []ValueType{ValueTypeI32, ValueTypeI32},
+				results: []ValueType{ValueTypeI32},
+			},
+		},
+		functionSection: []uint32{0},
+		codeSection: []Function{
+			{
+				locals: []FunctionLocal{},
+				code: []Instruction{
+					&InstructionLocalGet{idx: 0},
+					&InstructionLocalGet{idx: 1},
+					InstructionI32Add{},
+					InstructionEnd{},
+				},
+			},
+		},
+	}
+
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("unexpected module: %#v", got)
+	}
+}
