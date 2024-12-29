@@ -27,6 +27,12 @@ func (s *stack[T]) pop() T {
 	return r
 }
 
+func (s *stack[T]) drain(n int) []T {
+	r := (*s)[n:]
+	*s = (*s)[:n]
+	return r
+}
+
 func (s *stack[T]) len() int {
 	return len(*s)
 }
@@ -68,6 +74,15 @@ func (r *Runtime) execute() error {
 		inst := frame.instructions[frame.programCounter]
 
 		switch inst := inst.(type) {
+		case binary.InstructionEnd:
+			if r.callStack.len() < 1 {
+				return fmt.Errorf("call stack underflow")
+			}
+
+			frame := r.callStack.pop()
+			if err := r.stackUnwind(frame.stackPointer, frame.arity); err != nil {
+				return fmt.Errorf("failed to unwind stack: %w", err)
+			}
 		case binary.InstructionI32Add:
 			if r.stack.len() < 2 {
 				return fmt.Errorf("stack underflow")
@@ -82,6 +97,32 @@ func (r *Runtime) execute() error {
 		default:
 			return fmt.Errorf("unsupported instruction: %T", inst)
 		}
+	}
+
+	return nil
+}
+
+func (r *Runtime) stackUnwind(stackPointer, arity int) error {
+	if arity == 0 {
+		if r.stack.len() < stackPointer {
+			return fmt.Errorf("stack underflow")
+		}
+		r.stack.drain(stackPointer)
+		return nil
+	}
+	if r.stack.len() < stackPointer+arity {
+		return fmt.Errorf("stack underflow")
+	}
+
+	returns := make([]Value, 0, arity)
+	for range arity {
+		returns = append(returns, r.stack.pop())
+	}
+
+	r.stack.drain(stackPointer)
+
+	for _, v := range returns {
+		r.stack.push(v)
 	}
 
 	return nil
