@@ -56,7 +56,7 @@ func TestDecodeMinimalFunc(t *testing.T) {
 		codeSection: []Function{
 			{
 				locals: []FunctionLocal{},
-				code:   []Instruction{InstructionEnd},
+				code:   []Instruction{InstructionEnd{}},
 			},
 		},
 	}
@@ -92,7 +92,7 @@ func TestDecodeFuncParam(t *testing.T) {
 		codeSection: []Function{
 			{
 				locals: []FunctionLocal{},
-				code:   []Instruction{InstructionEnd},
+				code:   []Instruction{InstructionEnd{}},
 			},
 		},
 	}
@@ -132,7 +132,7 @@ func TestDecodeFuncLocal(t *testing.T) {
 					{typeCount: 1, valueType: ValueTypeI32},
 					{typeCount: 2, valueType: ValueTypeI64},
 				},
-				code: []Instruction{InstructionEnd},
+				code: []Instruction{InstructionEnd{}},
 			},
 		},
 	}

@@ -235,6 +235,42 @@ func decodeFunctionBody(r io.Reader) (Function, error) {
 		locals = append(locals, FunctionLocal{typeCount: typeCount, valueType: valueType})
 	}
 
-	// TODO: decode instructions
-	return Function{locals: locals, code: []Instruction{InstructionEnd}}, nil
+	instructions, err := decodeInstructions(r)
+	if err != nil {
+		return Function{}, fmt.Errorf("failed to decode instructions: %w", err)
+	}
+
+	return Function{locals: locals, code: instructions}, nil
+}
+
+func decodeInstructions(r io.Reader) ([]Instruction, error) {
+	var (
+		instructions []Instruction
+	)
+	for {
+		opcode, err := readByte(r)
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return nil, fmt.Errorf("failed to read opcode: %w", err)
+		}
+
+		switch Opcode(opcode) {
+		case OpcodeEnd:
+			instructions = append(instructions, InstructionEnd{})
+		case OpcodeLocalGet:
+			i := new(InstructionLocalGet)
+			if err := i.ReadFrom(r); err != nil {
+				return nil, fmt.Errorf("failed to read local.get instruction: %w", err)
+			}
+			instructions = append(instructions, i)
+		case OpcodeI32Add:
+			instructions = append(instructions, InstructionI32Add{})
+		default:
+			return nil, fmt.Errorf("unsupported opcode: %x", opcode)
+		}
+	}
+
+	return instructions, nil
 }
