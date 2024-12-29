@@ -5,6 +5,14 @@ type FuncType struct {
 	results []ValueType
 }
 
+func (f FuncType) Params() []ValueType {
+	return f.params
+}
+
+func (f FuncType) Results() []ValueType {
+	return f.results
+}
+
 type ValueType byte
 
 const (
@@ -15,4 +23,12 @@ const (
 type FunctionLocal struct {
 	typeCount uint32
 	valueType ValueType
+}
+
+func (f FunctionLocal) TypeCount() uint32 {
+	return f.typeCount
+}
+
+func (f FunctionLocal) ValueType() ValueType {
+	return f.valueType
 }
