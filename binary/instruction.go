@@ -37,7 +37,7 @@ func FromOpcode(op Opcode) (Instruction, error) {
 	case OpcodeI32Sub:
 		return new(InstructionI32Sub), nil
 	default:
-		return nil, fmt.Errorf("unknown opcode: %x", op)
+		return nil, fmt.Errorf("unknown opcode: %2x", op)
 	}
 }
 

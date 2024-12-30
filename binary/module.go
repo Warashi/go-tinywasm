@@ -159,7 +159,7 @@ func decodeTypeSection(r io.Reader) ([]FuncType, error) {
 			return nil, fmt.Errorf("failed to read function type: %w", err)
 		}
 		if f != 0x60 {
-			return nil, fmt.Errorf("unsupported function type: %x", f)
+			return nil, fmt.Errorf("unsupported function type: %2x", f)
 		}
 
 		paramCount, err := leb128.Uint32(r)
@@ -329,7 +329,7 @@ func decodeExportSection(r io.Reader) ([]Export, error) {
 		case 0x00:
 			exports = append(exports, Export{name: name, desc: ExportDescFunc{index: index}})
 		default:
-			return nil, fmt.Errorf("unsupported export kind: %x", kind)
+			return nil, fmt.Errorf("unsupported export kind: %2x", kind)
 		}
 	}
 

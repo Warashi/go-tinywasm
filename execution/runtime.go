@@ -3,7 +3,6 @@ package execution
 import (
 	"fmt"
 	"io"
-	"log"
 	"slices"
 
 	"github.com/Warashi/go-tinywasm/binary"
@@ -131,9 +130,6 @@ func (r *Runtime) execute() error {
 		if len(frame.instructions) <= frame.programCounter {
 			break
 		}
-
-		log.Println("stack", r.stack)
-		log.Printf("inst: %x", frame.instructions[frame.programCounter].Opcode())
 
 		switch inst := frame.instructions[frame.programCounter].(type) {
 		case *binary.InstructionIf:
