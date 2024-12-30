@@ -34,8 +34,8 @@ func (s *stack[T]) drain(n int) []T {
 }
 
 func (s *stack[T]) splitOff(n int) stack[T] {
-	r := (*s)[len(*s)-n:]
-	*s = (*s)[:len(*s)-n]
+	r := (*s)[n:]
+	*s = (*s)[:n]
 	return r
 }
 
@@ -46,7 +46,7 @@ func (s *stack[T]) len() int {
 type Runtime struct {
 	store     *Store
 	stack     stack[Value]
-	callStack stack[Frame]
+	callStack stack[*Frame]
 }
 
 func NewRuntime(r io.Reader) (*Runtime, error) {
@@ -65,13 +65,30 @@ func NewRuntime(r io.Reader) (*Runtime, error) {
 	}, nil
 }
 
-func (r *Runtime) execute() error {
-	for {
-		if len(r.callStack) == 0 {
-			break
-		}
+func (r *Runtime) Call(idx int, args []Value) ([]Value, error) {
+	if idx < 0 || len(r.store.funcs) <= idx {
+		return nil, fmt.Errorf("invalid function index: %d", idx)
+	}
 
+	f := r.store.funcs[idx]
+
+	for _, arg := range args {
+		r.stack.push(arg)
+	}
+
+	switch f := f.(type) {
+	case InternalFuncInst:
+		return r.invokeInternal(f)
+	default:
+		return nil, fmt.Errorf("unsupported function type: %T", f)
+	}
+}
+
+func (r *Runtime) execute() error {
+	for len(r.callStack) > 0 {
 		frame := r.callStack[len(r.callStack)-1]
+
+		frame.programCounter++
 
 		if len(frame.instructions) <= frame.programCounter {
 			break
@@ -89,6 +106,11 @@ func (r *Runtime) execute() error {
 			if err := r.stackUnwind(frame.stackPointer, frame.arity); err != nil {
 				return fmt.Errorf("failed to unwind stack: %w", err)
 			}
+		case *binary.InstructionLocalGet:
+			if len(frame.locals) <= int(inst.Index()) {
+				return fmt.Errorf("invalid local index: %d", inst.Index())
+			}
+			r.stack.push(frame.locals[inst.Index()])
 		case binary.InstructionI32Add:
 			if r.stack.len() < 2 {
 				return fmt.Errorf("stack underflow")
@@ -157,7 +179,7 @@ func (r *Runtime) invokeInternal(f InternalFuncInst) ([]Value, error) {
 		locals:         locals,
 	}
 
-	r.callStack.push(frame)
+	r.callStack.push(&frame)
 
 	if err := r.execute(); err != nil {
 		r.cleanup()
@@ -168,7 +190,17 @@ func (r *Runtime) invokeInternal(f InternalFuncInst) ([]Value, error) {
 		return nil, nil
 	}
 
-	return r.stack.drain(r.stack.len() - bottom), nil
+	if r.stack.len() < arity {
+		r.cleanup()
+		return nil, fmt.Errorf("stack underflow")
+	}
+
+	returns := make([]Value, 0, arity)
+	for range arity {
+		returns = append(returns, r.stack.pop())
+	}
+
+	return returns, nil
 }
 
 func (r *Runtime) cleanup() {

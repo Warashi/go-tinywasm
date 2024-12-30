@@ -24,6 +24,7 @@ func (i *InstructionLocalGet) ReadFrom(r io.Reader) error {
 	i.idx, err = leb128.Uint32(r)
 	return err
 }
+func (i InstructionLocalGet) Index() uint32 { return i.idx }
 
 type InstructionI32Add struct{}
 

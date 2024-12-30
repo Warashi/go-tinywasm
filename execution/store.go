@@ -11,7 +11,7 @@ type Store struct {
 }
 
 type FuncInst interface {
-	Call() error
+	funcInst()
 }
 
 type InternalFuncInst struct {
@@ -24,9 +24,7 @@ type Func struct {
 	body   []binary.Instruction
 }
 
-func (f *InternalFuncInst) Call() error {
-	panic("not implemented")
-}
+func (f InternalFuncInst) funcInst() {}
 
 func NewStore(module *binary.Module) (*Store, error) {
 	var funcs []FuncInst
@@ -40,7 +38,7 @@ func NewStore(module *binary.Module) (*Store, error) {
 			locals = append(locals, local.ValueType())
 		}
 
-		funcInst := &InternalFuncInst{
+		funcInst := InternalFuncInst{
 			funcType: funcType,
 			code: Func{
 				locals: locals,
