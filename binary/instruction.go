@@ -36,6 +36,16 @@ func (i *InstructionLocalGet) ReadFrom(r io.Reader) error {
 }
 func (i InstructionLocalGet) Index() uint32 { return i.index }
 
+type InstructionLocalSet struct{ index uint32 }
+
+func (InstructionLocalSet) Opcode() Opcode { return OpcodeLocalSet }
+func (i *InstructionLocalSet) ReadFrom(r io.Reader) error {
+	var err error
+	i.index, err = leb128.Uint32(r)
+	return err
+}
+func (i InstructionLocalSet) Index() uint32 { return i.index }
+
 type InstructionI32Add struct{}
 
 func (InstructionI32Add) Opcode() Opcode           { return OpcodeI32Add }

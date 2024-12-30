@@ -291,6 +291,12 @@ func decodeInstructions(r io.Reader) ([]Instruction, error) {
 				return nil, fmt.Errorf("failed to read local.get instruction: %w", err)
 			}
 			instructions = append(instructions, i)
+		case OpcodeLocalSet:
+			i := new(InstructionLocalSet)
+			if err := i.ReadFrom(r); err != nil {
+				return nil, fmt.Errorf("failed to read local.set instruction: %w", err)
+			}
+			instructions = append(instructions, i)
 		case OpcodeI32Add:
 			instructions = append(instructions, InstructionI32Add{})
 		default:

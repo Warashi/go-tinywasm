@@ -153,6 +153,14 @@ func (r *Runtime) execute() error {
 				return fmt.Errorf("invalid local index: %d", inst.Index())
 			}
 			r.stack.push(frame.locals[inst.Index()])
+		case *binary.InstructionLocalSet:
+			if len(frame.locals) <= int(inst.Index()) {
+				return fmt.Errorf("invalid local index: %d", inst.Index())
+			}
+			if r.stack.len() < 1 {
+				return fmt.Errorf("stack underflow")
+			}
+			frame.locals[inst.Index()] = r.stack.pop()
 		case binary.InstructionI32Add:
 			if r.stack.len() < 2 {
 				return fmt.Errorf("stack underflow")
