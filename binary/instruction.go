@@ -46,6 +46,24 @@ func (i *InstructionLocalSet) ReadFrom(r io.Reader) error {
 }
 func (i InstructionLocalSet) Index() uint32 { return i.index }
 
+type InstructionI32Store struct {
+	align  uint32
+	offset uint32
+}
+
+func (InstructionI32Store) Opcode() Opcode { return OpcodeI32Store }
+func (i *InstructionI32Store) ReadFrom(r io.Reader) error {
+	var err error
+	i.align, err = leb128.Uint32(r)
+	if err != nil {
+		return err
+	}
+	i.offset, err = leb128.Uint32(r)
+	return err
+}
+func (i InstructionI32Store) Align() uint32  { return i.align }
+func (i InstructionI32Store) Offset() uint32 { return i.offset }
+
 type InstructionI32Const struct{ value int32 }
 
 func (InstructionI32Const) Opcode() Opcode { return OpcodeI32Const }
