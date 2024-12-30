@@ -14,6 +14,8 @@ type Instruction interface {
 
 func FromOpcode(op Opcode) (Instruction, error) {
 	switch op {
+	case OpcodeIf:
+		return new(InstructionIf), nil
 	case OpcodeEnd:
 		return new(InstructionEnd), nil
 	case OpcodeCall:
@@ -26,17 +28,37 @@ func FromOpcode(op Opcode) (Instruction, error) {
 		return new(InstructionI32Store), nil
 	case OpcodeI32Const:
 		return new(InstructionI32Const), nil
+	case OpcodeI32LtS:
+		return new(InstructionI32LtS), nil
 	case OpcodeI32Add:
 		return new(InstructionI32Add), nil
+	case OpcodeI32Sub:
+		return new(InstructionI32Sub), nil
 	default:
 		return nil, fmt.Errorf("unknown opcode: %v", op)
 	}
+}
+
+type InstructionIf struct {
+	block Block
+}
+
+func (*InstructionIf) Opcode() Opcode { return OpcodeIf }
+func (i *InstructionIf) ReadOperandsFrom(r io.Reader) error {
+	var err error
+	i.block, err = decodeBlock(r)
+	return err
 }
 
 type InstructionEnd struct{}
 
 func (*InstructionEnd) Opcode() Opcode                   { return OpcodeEnd }
 func (*InstructionEnd) ReadOperandsFrom(io.Reader) error { return nil }
+
+type InstructionReturn struct{}
+
+func (*InstructionReturn) Opcode() Opcode                   { return OpcodeReturn }
+func (*InstructionReturn) ReadOperandsFrom(io.Reader) error { return nil }
 
 type InstructionCall struct{ index uint32 }
 
@@ -96,7 +118,17 @@ func (i *InstructionI32Const) ReadOperandsFrom(r io.Reader) error {
 }
 func (i *InstructionI32Const) Value() int32 { return i.value }
 
+type InstructionI32LtS struct{}
+
+func (*InstructionI32LtS) Opcode() Opcode                   { return OpcodeI32LtS }
+func (*InstructionI32LtS) ReadOperandsFrom(io.Reader) error { return nil }
+
 type InstructionI32Add struct{}
 
 func (*InstructionI32Add) Opcode() Opcode                   { return OpcodeI32Add }
 func (*InstructionI32Add) ReadOperandsFrom(io.Reader) error { return nil }
+
+type InstructionI32Sub struct{}
+
+func (*InstructionI32Sub) Opcode() Opcode                   { return OpcodeI32Sub }
+func (*InstructionI32Sub) ReadOperandsFrom(io.Reader) error { return nil }

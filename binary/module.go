@@ -479,3 +479,17 @@ func decodeDataSection(r io.Reader) ([]Data, error) {
 
 	return data, nil
 }
+
+func decodeBlock(r io.Reader) (Block, error) {
+	b, err := readByte(r)
+	if err != nil {
+		return Block{}, fmt.Errorf("failed to read block type: %w", err)
+	}
+
+	switch b {
+	case 0x40:
+		return Block{blockType: BlockTypeVoid{}}, nil
+	default:
+		return Block{blockType: BlockTypeValue{valueTypes: []ValueType{ValueType(b)}}}, nil
+	}
+}
