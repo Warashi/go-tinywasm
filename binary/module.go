@@ -15,6 +15,7 @@ type Module struct {
 	typeSection     []FuncType
 	functionSection []uint32
 	codeSection     []Function
+	exportSection   []Export
 }
 
 func NewModule(r io.Reader) (*Module, error) {
@@ -73,6 +74,11 @@ func decode(r io.Reader) (*Module, error) {
 			module.codeSection, err = decodeCodeSection(sectionContents)
 			if err != nil {
 				return nil, fmt.Errorf("failed to decode code section: %w", err)
+			}
+		case SectionCodeExport:
+			module.exportSection, err = decodeExportSection(sectionContents)
+			if err != nil {
+				return nil, fmt.Errorf("failed to decode export section: %w", err)
 			}
 		default:
 			return nil, fmt.Errorf("unsupported section code: %d", code)

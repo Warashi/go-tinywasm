@@ -177,6 +177,12 @@ func TestDecodeFuncAdd(t *testing.T) {
 				},
 			},
 		},
+		exportSection: []Export{
+			{
+				name: "add",
+				desc: ExportDescFunc{index: 0},
+			},
+		},
 	}
 
 	if !reflect.DeepEqual(want, got) {
