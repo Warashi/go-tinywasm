@@ -1,6 +1,7 @@
 package execution
 
 import (
+	"fmt"
 	"iter"
 
 	"github.com/Warashi/go-tinywasm/binary"
@@ -27,6 +28,14 @@ type Func struct {
 
 func (f InternalFuncInst) isFuncInst() {}
 
+type ExternalFuncInst struct {
+	module   string
+	fn       string
+	funcType binary.FuncType
+}
+
+func (f ExternalFuncInst) isFuncInst() {}
+
 type ExportInst struct {
 	name string
 	desc binary.ExportDesc
@@ -38,6 +47,24 @@ type ModuleInst struct {
 
 func NewStore(module *binary.Module) (*Store, error) {
 	var funcs []FuncInst
+
+	for _, impt := range module.ImportSection() {
+		moduleName := impt.Module()
+		field := impt.Field()
+		switch desc := impt.Desc().(type) {
+		case binary.ImportDescFunc:
+			if desc.Index() < 0 || len(module.TypeSection()) <= int(desc.Index()) {
+				return nil, fmt.Errorf("invalid function index: %d", desc.Index())
+			}
+			funcType := module.TypeSection()[desc.Index()]
+
+			funcs = append(funcs, ExternalFuncInst{
+				module:   moduleName,
+				fn:       field,
+				funcType: funcType,
+			})
+		}
+	}
 
 	for body, typeIdx := range zipSlice(module.CodeSection(), module.FunctionSection()) {
 		funcType := module.TypeSection()[typeIdx]

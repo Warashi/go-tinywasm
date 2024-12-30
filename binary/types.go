@@ -60,10 +60,10 @@ func (i ImportDescFunc) Index() uint32 { return i.index }
 
 type Import struct {
 	module string
-	name   string
+	field  string
 	desc   ImportDesc
 }
 
 func (i Import) Module() string   { return i.module }
-func (i Import) Name() string     { return i.name }
+func (i Import) Field() string    { return i.field }
 func (i Import) Desc() ImportDesc { return i.desc }

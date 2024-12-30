@@ -361,7 +361,7 @@ func decodeImportSection(r io.Reader) ([]Import, error) {
 			if err != nil {
 				return nil, fmt.Errorf("failed to read import index: %w", err)
 			}
-			imports = append(imports, Import{module: module, name: name, desc: ImportDescFunc{index: index}})
+			imports = append(imports, Import{module: module, field: name, desc: ImportDescFunc{index: index}})
 		default:
 			return nil, fmt.Errorf("unsupported import kind: %x", kind)
 		}

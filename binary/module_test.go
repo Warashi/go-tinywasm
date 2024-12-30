@@ -272,7 +272,7 @@ func TestDecodeImport(t *testing.T) {
 		importSection: []Import{
 			{
 				module: "env",
-				name:   "add",
+				field:  "add",
 				desc:   ImportDescFunc{index: 0},
 			},
 		},
