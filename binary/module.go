@@ -286,3 +286,50 @@ func decodeInstructions(r io.Reader) ([]Instruction, error) {
 
 	return instructions, nil
 }
+
+func decodeExportSection(r io.Reader) ([]Export, error) {
+	count, err := leb128.Uint32(r)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read export count: %w", err)
+	}
+
+	exports := make([]Export, 0, count)
+
+	for range count {
+		name, err := decodeName(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode export name: %w", err)
+		}
+		kind, err := readByte(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read export kind: %w", err)
+		}
+		index, err := leb128.Uint32(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read export index: %w", err)
+		}
+
+		switch kind {
+		case 0x00:
+			exports = append(exports, Export{name: name, desc: ExportDescFunc{index: index}})
+		default:
+			return nil, fmt.Errorf("unsupported export kind: %x", kind)
+		}
+	}
+
+	return exports, nil
+}
+
+func decodeName(r io.Reader) (string, error) {
+	size, err := leb128.Uint32(r)
+	if err != nil {
+		return "", fmt.Errorf("failed to read name size: %w", err)
+	}
+
+	name := make([]byte, size)
+	if _, err := io.ReadFull(r, name); err != nil {
+		return "", fmt.Errorf("failed to read name: %w", err)
+	}
+
+	return string(name), nil
+}
