@@ -35,6 +35,11 @@ func ValueFrom(v any) (Value, error) {
 		return ValueI32(v), nil
 	case int64:
 		return ValueI64(v), nil
+	case bool:
+		if v {
+			return ValueI32(1), nil
+		}
+		return ValueI32(0), nil
 	}
 	return nil, fmt.Errorf("unsupported type %T", v)
 }
@@ -74,6 +79,26 @@ func Sub(a, b Value) (Value, error) {
 		return ValueI32(a - b.(ValueI32)), nil
 	case ValueI64:
 		return ValueI64(a - b.(ValueI64)), nil
+	}
+
+	return nil, fmt.Errorf("unsupported type %T", a)
+}
+
+func LessThan(a, b Value) (Value, error) {
+	if a.Type() != b.Type() {
+		return nil, fmt.Errorf("type mismatch: %v < %v", a.Type(), b.Type())
+	}
+	switch a := a.(type) {
+	case ValueI32:
+		if a < b.(ValueI32) {
+			return ValueI32(1), nil
+		}
+		return ValueI32(0), nil
+	case ValueI64:
+		if a < b.(ValueI64) {
+			return ValueI32(1), nil
+		}
+		return ValueI32(0), nil
 	}
 
 	return nil, fmt.Errorf("unsupported type %T", a)
