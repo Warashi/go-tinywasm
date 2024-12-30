@@ -117,6 +117,14 @@ func (r *Runtime) execute() error {
 			if err := r.stackUnwind(frame.stackPointer, frame.arity); err != nil {
 				return fmt.Errorf("failed to unwind stack: %w", err)
 			}
+		case *binary.InstructionCall:
+			if int(inst.Index()) < 0 || len(r.store.funcs) <= int(inst.Index()) {
+				return fmt.Errorf("invalid function index: %d", inst.Index())
+			}
+			switch f := r.store.funcs[inst.Index()].(type) {
+			case InternalFuncInst:
+				r.pushFrame(f)
+			}
 		case *binary.InstructionLocalGet:
 			if len(frame.locals) <= int(inst.Index()) {
 				return fmt.Errorf("invalid local index: %d", inst.Index())
@@ -166,8 +174,7 @@ func (r *Runtime) stackUnwind(stackPointer, arity int) error {
 
 	return nil
 }
-
-func (r *Runtime) invokeInternal(f InternalFuncInst) ([]Value, error) {
+func (r *Runtime) pushFrame(f InternalFuncInst) {
 	bottom := r.stack.len() - len(f.funcType.Params())
 	locals := r.stack.splitOff(bottom)
 
@@ -191,6 +198,12 @@ func (r *Runtime) invokeInternal(f InternalFuncInst) ([]Value, error) {
 	}
 
 	r.callStack.push(&frame)
+}
+
+func (r *Runtime) invokeInternal(f InternalFuncInst) ([]Value, error) {
+	arity := len(f.funcType.Results())
+
+	r.pushFrame(f)
 
 	if err := r.execute(); err != nil {
 		r.cleanup()
