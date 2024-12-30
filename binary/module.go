@@ -12,6 +12,7 @@ import (
 type Module struct {
 	magic           string
 	version         uint32
+	memorySection   []Memory
 	typeSection     []FuncType
 	functionSection []uint32
 	codeSection     []Function
@@ -23,6 +24,7 @@ func NewModule(r io.Reader) (*Module, error) {
 	return decode(r)
 }
 
+func (m *Module) MemorySection() []Memory   { return m.memorySection }
 func (m *Module) TypeSection() []FuncType   { return m.typeSection }
 func (m *Module) FunctionSection() []uint32 { return m.functionSection }
 func (m *Module) CodeSection() []Function   { return m.codeSection }
@@ -62,25 +64,30 @@ func decode(r io.Reader) (*Module, error) {
 			if err != nil {
 				return nil, fmt.Errorf("failed to decode type section: %w", err)
 			}
+		case SectionCodeImport:
+			module.importSection, err = decodeImportSection(sectionContents)
+			if err != nil {
+				return nil, fmt.Errorf("failed to decode import section: %w", err)
+			}
 		case SectionCodeFunction:
 			module.functionSection, err = decodeFunctionSection(sectionContents)
 			if err != nil {
 				return nil, fmt.Errorf("failed to decode function section: %w", err)
 			}
-		case SectionCodeCode:
-			module.codeSection, err = decodeCodeSection(sectionContents)
+		case SectionCodeMemory:
+			module.memorySection, err = decodeMemorySection(sectionContents)
 			if err != nil {
-				return nil, fmt.Errorf("failed to decode code section: %w", err)
+				return nil, fmt.Errorf("failed to decode memory section: %w", err)
 			}
 		case SectionCodeExport:
 			module.exportSection, err = decodeExportSection(sectionContents)
 			if err != nil {
 				return nil, fmt.Errorf("failed to decode export section: %w", err)
 			}
-		case SectionCodeImport:
-			module.importSection, err = decodeImportSection(sectionContents)
+		case SectionCodeCode:
+			module.codeSection, err = decodeCodeSection(sectionContents)
 			if err != nil {
-				return nil, fmt.Errorf("failed to decode import section: %w", err)
+				return nil, fmt.Errorf("failed to decode code section: %w", err)
 			}
 		default:
 			return nil, fmt.Errorf("unsupported section code: %d", code)
@@ -386,6 +393,49 @@ func decodeImportSection(r io.Reader) ([]Import, error) {
 	}
 
 	return imports, nil
+}
+
+func decodeMemorySection(r io.Reader) ([]Memory, error) {
+	count, err := leb128.Uint32(r)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read memory count: %w", err)
+	}
+
+	memories := make([]Memory, 0, count)
+
+	for range count {
+		m := Memory{}
+		m.limits, err = decodeLimits(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode memory limits: %w", err)
+		}
+		memories = append(memories, m)
+	}
+
+	return memories, nil
+}
+
+func decodeLimits(r io.Reader) (Limits, error) {
+	hasMax, err := leb128.Uint32(r)
+	if err != nil {
+		return Limits{}, fmt.Errorf("failed to read hasMax: %w", err)
+	}
+
+	min, err := leb128.Uint32(r)
+	if err != nil {
+		return Limits{}, fmt.Errorf("failed to read min: %w", err)
+	}
+
+	if hasMax == 0 {
+		return Limits{min: min, max: 0}, nil
+	}
+
+	max, err := leb128.Uint32(r)
+	if err != nil {
+		return Limits{}, fmt.Errorf("failed to read max: %w", err)
+	}
+
+	return Limits{min: min, max: max}, nil
 }
 
 func decodeName(r io.Reader) (string, error) {

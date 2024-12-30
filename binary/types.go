@@ -67,3 +67,17 @@ type Import struct {
 func (i Import) Module() string   { return i.module }
 func (i Import) Field() string    { return i.field }
 func (i Import) Desc() ImportDesc { return i.desc }
+
+type Limits struct {
+	min uint32
+	max uint32
+}
+
+func (l Limits) Min() uint32 { return l.min }
+func (l Limits) Max() uint32 { return l.max }
+
+type Memory struct {
+	limits Limits
+}
+
+func (m Memory) Limits() Limits { return m.limits }
