@@ -11,7 +11,7 @@ type Store struct {
 }
 
 type FuncInst interface {
-	funcInst()
+	isFuncInst()
 }
 
 type InternalFuncInst struct {
@@ -24,7 +24,7 @@ type Func struct {
 	body   []binary.Instruction
 }
 
-func (f InternalFuncInst) funcInst() {}
+func (f InternalFuncInst) isFuncInst() {}
 
 func NewStore(module *binary.Module) (*Store, error) {
 	var funcs []FuncInst
