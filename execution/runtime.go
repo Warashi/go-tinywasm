@@ -98,6 +98,18 @@ func (r *Runtime) Call(name string, args []Value) ([]Value, error) {
 	}
 }
 
+func (r *Runtime) AddImport(moduleName, funcName string, fn ImportFunc) {
+	if r.imports == nil {
+		r.imports = make(Import)
+	}
+	if _, ok := r.imports[moduleName]; !ok {
+		r.imports[moduleName] = make(map[string]ImportFunc)
+	}
+	r.imports[moduleName][funcName] = fn
+
+	return
+}
+
 func (r *Runtime) execute() error {
 	for len(r.callStack) > 0 {
 		frame := r.callStack[len(r.callStack)-1]

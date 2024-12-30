@@ -119,3 +119,56 @@ func TestFuncCall(t *testing.T) {
 		})
 	}
 }
+
+func TestCallImportedFunc(t *testing.T) {
+	t.Parallel()
+
+	b, err := os.ReadFile("../testdata/import.wasm")
+	if err != nil {
+		t.Errorf("failed to load testdata: %v", err)
+		t.FailNow()
+	}
+
+	runtime, err := execution.NewRuntime(bytes.NewReader(b))
+	if err != nil {
+		t.Errorf("failed to create runtime: %v", err)
+		t.FailNow()
+	}
+
+	runtime.AddImport("env", "add", func(s *execution.Store, v ...execution.Value) ([]execution.Value, error) {
+		switch arg := v[0].(type) {
+		case execution.ValueI32:
+			return []execution.Value{execution.ValueI32(arg + arg)}, nil
+		default:
+			return nil, fmt.Errorf("unsupported argument type: %T", arg)
+		}
+	})
+
+	tests := []struct {
+		a, want int32
+	}{
+		{1, 2},
+		{2, 4},
+		{3, 6},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("double(%d)=%d", test.a, test.want), func(t *testing.T) {
+			args := []execution.Value{
+				execution.ValueI32(test.a),
+			}
+			got, err := runtime.Call("call_add", args)
+			if err != nil {
+				t.Errorf("failed to call function: %v", err)
+				t.FailNow()
+			}
+			if len(got) != 1 {
+				t.Errorf("unexpected number of return values: %d", len(got))
+				t.FailNow()
+			}
+			if got, ok := got[0].(execution.ValueI32); !ok || got != execution.ValueI32(test.want) {
+				t.Errorf("unexpected return value: %v", got)
+			}
+		})
+	}
+}
