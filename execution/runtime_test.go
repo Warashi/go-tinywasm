@@ -192,3 +192,66 @@ func TestNotFoundImportedFunc(t *testing.T) {
 		t.Error("unexpected success")
 	}
 }
+
+func TestI32Const(t *testing.T) {
+	t.Parallel()
+
+	b, err := os.ReadFile("../testdata/i32_const.wasm")
+	if err != nil {
+		t.Errorf("failed to load testdata: %v", err)
+		t.FailNow()
+	}
+
+	runtime, err := execution.NewRuntime(bytes.NewReader(b))
+	if err != nil {
+		t.Errorf("failed to create runtime: %v", err)
+		t.FailNow()
+	}
+
+	got, err := runtime.Call("i32_const", nil)
+	if err != nil {
+		t.Errorf("failed to call function: %v", err)
+		t.FailNow()
+	}
+
+	if len(got) != 1 {
+		t.Errorf("unexpected number of return values: %d", len(got))
+		t.FailNow()
+	}
+
+	if got, ok := got[0].(execution.ValueI32); !ok || got != 42 {
+		t.Errorf("unexpected return value: %v", got)
+	}
+}
+
+func TestLocalSet(t *testing.T) {
+	t.Parallel()
+
+	b, err := os.ReadFile("../testdata/local_set.wasm")
+	if err != nil {
+		t.Errorf("failed to load testdata: %v", err)
+		t.FailNow()
+	}
+
+	runtime, err := execution.NewRuntime(bytes.NewReader(b))
+	if err != nil {
+		t.Errorf("failed to create runtime: %v", err)
+		t.FailNow()
+	}
+
+	got, err := runtime.Call("local_set", nil)
+	if err != nil {
+		t.Errorf("failed to call function: %v", err)
+		t.FailNow()
+	}
+
+	if len(got) != 1 {
+		t.Errorf("unexpected number of return values: %d", len(got))
+		t.FailNow()
+	}
+
+	if got, ok := got[0].(execution.ValueI32); !ok || got != 42 {
+		t.Errorf("unexpected return value: %v", got)
+	}
+
+}

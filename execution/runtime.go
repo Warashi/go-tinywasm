@@ -161,6 +161,8 @@ func (r *Runtime) execute() error {
 				return fmt.Errorf("stack underflow")
 			}
 			frame.locals[inst.Index()] = r.stack.pop()
+		case *binary.InstructionI32Const:
+			r.stack.push(ValueI32(inst.Value()))
 		case binary.InstructionI32Add:
 			if r.stack.len() < 2 {
 				return fmt.Errorf("stack underflow")
