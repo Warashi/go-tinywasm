@@ -74,3 +74,9 @@ func writeValue(buf []byte, v Value) (int, error) {
 	}
 	return 0, fmt.Errorf("unsupported type %T", v)
 }
+
+func readValue[T Value](buf []byte) (int, T, error) {
+	var v T
+	n, err := binary.Decode(buf, binary.LittleEndian, &v)
+	return n, v, err
+}

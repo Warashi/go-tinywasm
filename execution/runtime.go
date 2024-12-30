@@ -48,6 +48,7 @@ type Runtime struct {
 	stack     stack[Value]
 	callStack stack[*Frame]
 	imports   Import
+	wasi      *WasiSnapshotPreview1
 }
 
 func NewRuntime(r io.Reader) (*Runtime, error) {
@@ -64,6 +65,16 @@ func NewRuntime(r io.Reader) (*Runtime, error) {
 	return &Runtime{
 		store: store,
 	}, nil
+}
+
+func NewRuntimeWithWasi(r io.Reader) (*Runtime, error) {
+	runtime, err := NewRuntime(r)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create runtime: %w", err)
+	}
+	runtime.wasi = NewWasiSnapshotPreview1()
+
+	return runtime, nil
 }
 
 func (r *Runtime) Call(name string, args []Value) ([]Value, error) {
@@ -273,6 +284,11 @@ func (r *Runtime) invokeInternal(f InternalFuncInst) ([]Value, error) {
 func (r *Runtime) invokeExternal(f ExternalFuncInst) ([]Value, error) {
 	bottom := r.stack.len() - len(f.funcType.Params())
 	args := r.stack.splitOff(bottom)
+
+	if f.module == "wasi_snapshot_preview1" && r.wasi != nil {
+		return r.wasi.invoke(r.store, f.fn, args...)
+	}
+
 	module, ok := r.imports[f.module]
 	if !ok {
 		return nil, fmt.Errorf("module not found: %s", f.module)
