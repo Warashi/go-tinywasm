@@ -91,3 +91,24 @@ type Data struct {
 func (d Data) MemoryIndex() uint32 { return d.memoryIndex }
 func (d Data) Offset() uint32      { return d.offset }
 func (d Data) Init() []byte        { return d.init }
+
+type Block struct {
+	blockType BlockType
+}
+
+type BlockType interface {
+	isBlockType()
+	ResultCount() int
+}
+
+type BlockTypeVoid struct{}
+
+func (b BlockTypeVoid) isBlockType()     {}
+func (b BlockTypeVoid) ResultCount() int { return 0 }
+
+type BlockTypeValue struct {
+	valueTypes []ValueType
+}
+
+func (b BlockTypeValue) isBlockType()     {}
+func (b BlockTypeValue) ResultCount() int { return len(b.valueTypes) }
