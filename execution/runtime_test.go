@@ -54,3 +54,23 @@ func TestExecuteI32Add(t *testing.T) {
 		})
 	}
 }
+
+func TestNotFoundExportedFunction(t *testing.T) {
+	t.Parallel()
+
+	b, err := os.ReadFile("../testdata/func_add.wasm")
+	if err != nil {
+		t.Errorf("failed to load testdata: %v", err)
+		t.FailNow()
+	}
+
+	runtime, err := execution.NewRuntime(bytes.NewReader(b))
+	if err != nil {
+		t.Errorf("failed to create runtime: %v", err)
+		t.FailNow()
+	}
+
+	if _, err := runtime.Call("not_found", nil); err == nil {
+		t.Error("unexpected success")
+	}
+}
