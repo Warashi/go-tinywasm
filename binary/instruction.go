@@ -18,6 +18,8 @@ func FromOpcode(op Opcode) (Instruction, error) {
 		return new(InstructionIf), nil
 	case OpcodeEnd:
 		return new(InstructionEnd), nil
+	case OpcodeReturn:
+		return new(InstructionReturn), nil
 	case OpcodeCall:
 		return new(InstructionCall), nil
 	case OpcodeLocalGet:
@@ -35,7 +37,7 @@ func FromOpcode(op Opcode) (Instruction, error) {
 	case OpcodeI32Sub:
 		return new(InstructionI32Sub), nil
 	default:
-		return nil, fmt.Errorf("unknown opcode: %v", op)
+		return nil, fmt.Errorf("unknown opcode: %x", op)
 	}
 }
 

@@ -299,3 +299,65 @@ func TestDecodeImport(t *testing.T) {
 		t.Errorf("unexpected module: %#v", got)
 	}
 }
+
+func TestDecodeFib(t *testing.T) {
+	t.Parallel()
+
+	b, err := os.ReadFile("../testdata/fib.wasm")
+	if err != nil {
+		t.Errorf("failed to load testdata: %v", err)
+		t.FailNow()
+	}
+
+	got, err := NewModule(bytes.NewReader(b))
+	if err != nil {
+		t.Errorf("failed to parse wasm: %v", err)
+	}
+
+	want := &Module{
+		magic:   "\x00asm",
+		version: 1,
+		typeSection: []FuncType{
+			{
+				params:  []ValueType{ValueTypeI32},
+				results: []ValueType{ValueTypeI32},
+			},
+		},
+		exportSection: []Export{
+			{
+				name: "fib",
+				desc: ExportDescFunc{index: 0},
+			},
+		},
+		functionSection: []uint32{0},
+		codeSection: []Function{
+			{
+				locals: []FunctionLocal{},
+				code: []Instruction{
+					&InstructionLocalGet{index: 0},
+					&InstructionI32Const{value: 2},
+					&InstructionI32LtS{},
+					&InstructionIf{block: Block{blockType: BlockTypeVoid{}}},
+					&InstructionI32Const{value: 1},
+					&InstructionReturn{},
+					&InstructionEnd{},
+					&InstructionLocalGet{index: 0},
+					&InstructionI32Const{value: 2},
+					&InstructionI32Sub{},
+					&InstructionCall{index: 0},
+					&InstructionLocalGet{index: 0},
+					&InstructionI32Const{value: 1},
+					&InstructionI32Sub{},
+					&InstructionCall{index: 0},
+					&InstructionI32Add{},
+					&InstructionReturn{},
+					&InstructionEnd{},
+				},
+			},
+		},
+	}
+
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("unexpected module: %#v", got)
+	}
+}
