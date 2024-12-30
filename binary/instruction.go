@@ -16,15 +16,15 @@ type InstructionEnd struct{}
 func (InstructionEnd) Opcode() Opcode           { return OpcodeEnd }
 func (InstructionEnd) ReadFrom(io.Reader) error { return nil }
 
-type InstructionLocalGet struct{ idx uint32 }
+type InstructionLocalGet struct{ index uint32 }
 
 func (InstructionLocalGet) Opcode() Opcode { return OpcodeLocalGet }
 func (i *InstructionLocalGet) ReadFrom(r io.Reader) error {
 	var err error
-	i.idx, err = leb128.Uint32(r)
+	i.index, err = leb128.Uint32(r)
 	return err
 }
-func (i InstructionLocalGet) Index() uint32 { return i.idx }
+func (i InstructionLocalGet) Index() uint32 { return i.index }
 
 type InstructionI32Add struct{}
 
