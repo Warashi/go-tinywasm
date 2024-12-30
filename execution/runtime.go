@@ -47,6 +47,7 @@ type Runtime struct {
 	store     *Store
 	stack     stack[Value]
 	callStack stack[*Frame]
+	imports   Import
 }
 
 func NewRuntime(r io.Reader) (*Runtime, error) {
@@ -90,6 +91,8 @@ func (r *Runtime) Call(name string, args []Value) ([]Value, error) {
 	switch f := f.(type) {
 	case InternalFuncInst:
 		return r.invokeInternal(f)
+	case ExternalFuncInst:
+		return r.invokeExternal(f)
 	default:
 		return nil, fmt.Errorf("unsupported function type: %T", f)
 	}
@@ -124,6 +127,14 @@ func (r *Runtime) execute() error {
 			switch f := r.store.funcs[inst.Index()].(type) {
 			case InternalFuncInst:
 				r.pushFrame(f)
+			case ExternalFuncInst:
+				v, err := r.invokeExternal(f)
+				if err != nil {
+					return fmt.Errorf("failed to invoke external function: %w", err)
+				}
+				for _, v := range v {
+					r.stack.push(v)
+				}
 			}
 		case *binary.InstructionLocalGet:
 			if len(frame.locals) <= int(inst.Index()) {
@@ -225,6 +236,20 @@ func (r *Runtime) invokeInternal(f InternalFuncInst) ([]Value, error) {
 	}
 
 	return returns, nil
+}
+
+func (r *Runtime) invokeExternal(f ExternalFuncInst) ([]Value, error) {
+	bottom := r.stack.len() - len(f.funcType.Params())
+	args := r.stack.splitOff(bottom)
+	module, ok := r.imports[f.module]
+	if !ok {
+		return nil, fmt.Errorf("module not found: %s", f.module)
+	}
+	fn, ok := module[f.fn]
+	if !ok {
+		return nil, fmt.Errorf("function not found: %s", f.fn)
+	}
+	return fn(r.store, args...)
 }
 
 func (r *Runtime) cleanup() {
