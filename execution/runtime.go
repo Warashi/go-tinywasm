@@ -30,10 +30,8 @@ func (s *stack[T]) pop() T {
 	return r
 }
 
-func (s *stack[T]) drain(n int) []T {
-	r := (*s)[n:]
+func (s *stack[T]) drain(n int) {
 	*s = (*s)[:n]
-	return r
 }
 
 func (s *stack[T]) splitOff(n int) stack[T] {
