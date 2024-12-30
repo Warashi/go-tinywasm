@@ -253,5 +253,30 @@ func TestLocalSet(t *testing.T) {
 	if got, ok := got[0].(execution.ValueI32); !ok || got != 42 {
 		t.Errorf("unexpected return value: %v", got)
 	}
+}
 
+func TestI32Store(t *testing.T) {
+	t.Parallel()
+
+	b, err := os.ReadFile("../testdata/i32_store.wasm")
+	if err != nil {
+		t.Errorf("failed to load testdata: %v", err)
+		t.FailNow()
+	}
+
+	runtime, err := execution.NewRuntime(bytes.NewReader(b))
+	if err != nil {
+		t.Errorf("failed to create runtime: %v", err)
+		t.FailNow()
+	}
+
+	if _, err := runtime.Call("i32_store", nil); err != nil {
+		t.Errorf("failed to call function: %v", err)
+		t.FailNow()
+	}
+
+	memory := runtime.Store().Memories()[0].Data()
+	if memory[0] != 42 {
+		t.Errorf("unexpected memory content: %v", memory)
+	}
 }

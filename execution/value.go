@@ -1,6 +1,9 @@
 package execution
 
-import "fmt"
+import (
+	"encoding/binary"
+	"fmt"
+)
 
 type ValueType byte
 
@@ -60,4 +63,14 @@ func Add(a, b Value) (Value, error) {
 	}
 
 	return nil, fmt.Errorf("unsupported type %T", a)
+}
+
+func writeValue(buf []byte, v Value) (int, error) {
+	switch v := v.(type) {
+	case ValueI32:
+		return binary.Encode(buf, binary.LittleEndian, int32(v))
+	case ValueI64:
+		return binary.Encode(buf, binary.LittleEndian, int64(v))
+	}
+	return 0, fmt.Errorf("unsupported type %T", v)
 }

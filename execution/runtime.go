@@ -161,6 +161,16 @@ func (r *Runtime) execute() error {
 				return fmt.Errorf("stack underflow")
 			}
 			frame.locals[inst.Index()] = r.stack.pop()
+		case *binary.InstructionI32Store:
+			if r.stack.len() < 2 {
+				return fmt.Errorf("stack underflow")
+			}
+			value, addr := r.stack.pop(), r.stack.pop()
+			at := int(addr.(ValueI32)) + int(inst.Offset())
+			end := at + 4
+			if _, err := writeValue(r.store.memories[0].data[at:end], value); err != nil {
+				return fmt.Errorf("failed to store: %w", err)
+			}
 		case *binary.InstructionI32Const:
 			r.stack.push(ValueI32(inst.Value()))
 		case binary.InstructionI32Add:
