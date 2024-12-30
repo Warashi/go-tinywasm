@@ -172,3 +172,23 @@ func TestCallImportedFunc(t *testing.T) {
 		})
 	}
 }
+
+func TestNotFoundImportedFunc(t *testing.T) {
+	t.Parallel()
+
+	b, err := os.ReadFile("../testdata/import.wasm")
+	if err != nil {
+		t.Errorf("failed to load testdata: %v", err)
+		t.FailNow()
+	}
+
+	runtime, err := execution.NewRuntime(bytes.NewReader(b))
+	if err != nil {
+		t.Errorf("failed to create runtime: %v", err)
+		t.FailNow()
+	}
+
+	if _, err := runtime.Call("call_not_found", nil); err == nil {
+		t.Error("unexpected success")
+	}
+}
