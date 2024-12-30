@@ -39,7 +39,7 @@ func TestExecuteI32Add(t *testing.T) {
 				execution.ValueI32(test.a),
 				execution.ValueI32(test.b),
 			}
-			got, err := runtime.Call(0, args)
+			got, err := runtime.Call("add", args)
 			if err != nil {
 				t.Errorf("failed to call function: %v", err)
 				t.FailNow()

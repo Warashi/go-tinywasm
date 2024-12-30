@@ -65,12 +65,23 @@ func NewRuntime(r io.Reader) (*Runtime, error) {
 	}, nil
 }
 
-func (r *Runtime) Call(idx int, args []Value) ([]Value, error) {
-	if idx < 0 || len(r.store.funcs) <= idx {
-		return nil, fmt.Errorf("invalid function index: %d", idx)
+func (r *Runtime) Call(name string, args []Value) ([]Value, error) {
+	inst, ok := r.store.module.exports[name]
+	if !ok {
+		return nil, fmt.Errorf("export not found: %s", name)
 	}
 
-	f := r.store.funcs[idx]
+	var index int
+	switch desc := inst.desc.(type) {
+	case binary.ExportDescFunc:
+		index = int(desc.Index())
+	}
+
+	if index < 0 || len(r.store.funcs) <= index {
+		return nil, fmt.Errorf("invalid function index: %d", index)
+	}
+
+	f := r.store.funcs[index]
 
 	for _, arg := range args {
 		r.stack.push(arg)

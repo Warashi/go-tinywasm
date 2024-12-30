@@ -7,7 +7,8 @@ import (
 )
 
 type Store struct {
-	funcs []FuncInst
+	funcs  []FuncInst
+	module ModuleInst
 }
 
 type FuncInst interface {
@@ -25,6 +26,15 @@ type Func struct {
 }
 
 func (f InternalFuncInst) isFuncInst() {}
+
+type ExportInst struct {
+	name string
+	desc binary.ExportDesc
+}
+
+type ModuleInst struct {
+	exports map[string]ExportInst
+}
 
 func NewStore(module *binary.Module) (*Store, error) {
 	var funcs []FuncInst
@@ -49,8 +59,19 @@ func NewStore(module *binary.Module) (*Store, error) {
 		funcs = append(funcs, funcInst)
 	}
 
+	exports := make(map[string]ExportInst, len(module.ExportSection()))
+	for _, export := range module.ExportSection() {
+		exports[export.Name()] = ExportInst{
+			name: export.Name(),
+			desc: export.Desc(),
+		}
+	}
+
 	return &Store{
 		funcs: funcs,
+		module: ModuleInst{
+			exports: exports,
+		},
 	}, nil
 }
 
