@@ -53,6 +53,8 @@ func decode(r io.Reader) (*Module, error) {
 		}
 
 		switch code {
+		case SectionCodeCustom:
+			// ignore custom sections
 		case SectionCodeType:
 			module.typeSection, err = decodeTypeSection(sectionContents)
 			if err != nil {
@@ -270,6 +272,12 @@ func decodeInstructions(r io.Reader) ([]Instruction, error) {
 		switch Opcode(opcode) {
 		case OpcodeEnd:
 			instructions = append(instructions, InstructionEnd{})
+		case OpcodeCall:
+			i := new(InstructionCall)
+			if err := i.ReadFrom(r); err != nil {
+				return nil, fmt.Errorf("failed to read call instruction: %w", err)
+			}
+			instructions = append(instructions, i)
 		case OpcodeLocalGet:
 			i := new(InstructionLocalGet)
 			if err := i.ReadFrom(r); err != nil {
