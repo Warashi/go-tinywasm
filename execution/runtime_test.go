@@ -74,3 +74,48 @@ func TestNotFoundExportedFunction(t *testing.T) {
 		t.Error("unexpected success")
 	}
 }
+
+func TestFuncCall(t *testing.T) {
+	t.Parallel()
+
+	b, err := os.ReadFile("../testdata/func_call.wasm")
+	if err != nil {
+		t.Errorf("failed to load testdata: %v", err)
+		t.FailNow()
+	}
+
+	runtime, err := execution.NewRuntime(bytes.NewReader(b))
+	if err != nil {
+		t.Errorf("failed to create runtime: %v", err)
+		t.FailNow()
+	}
+
+	tests := []struct {
+		a    int32
+		want int32
+	}{
+		{1, 2},
+		{2, 4},
+		{3, 6},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("double(%d)=%d", test.a, test.want), func(t *testing.T) {
+			args := []execution.Value{
+				execution.ValueI32(test.a),
+			}
+			got, err := runtime.Call("call_doubler", args)
+			if err != nil {
+				t.Errorf("failed to call function: %v", err)
+				t.FailNow()
+			}
+			if len(got) != 1 {
+				t.Errorf("unexpected number of return values: %d", len(got))
+				t.FailNow()
+			}
+			if got, ok := got[0].(execution.ValueI32); !ok || got != execution.ValueI32(test.want) {
+				t.Errorf("unexpected return value: %v", got)
+			}
+		})
+	}
+}
