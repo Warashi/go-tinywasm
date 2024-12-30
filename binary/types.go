@@ -32,3 +32,14 @@ func (f FunctionLocal) TypeCount() uint32 {
 func (f FunctionLocal) ValueType() ValueType {
 	return f.valueType
 }
+
+type ExportDesc interface {
+	isExportDesc()
+}
+
+type ExportDescFunc struct {
+	index uint32
+}
+
+func (e ExportDescFunc) isExportDesc() {}
+func (e ExportDescFunc) Index() uint32 { return e.index }

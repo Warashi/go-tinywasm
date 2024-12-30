@@ -170,8 +170,8 @@ func TestDecodeFuncAdd(t *testing.T) {
 			{
 				locals: []FunctionLocal{},
 				code: []Instruction{
-					&InstructionLocalGet{idx: 0},
-					&InstructionLocalGet{idx: 1},
+					&InstructionLocalGet{index: 0},
+					&InstructionLocalGet{index: 1},
 					InstructionI32Add{},
 					InstructionEnd{},
 				},
