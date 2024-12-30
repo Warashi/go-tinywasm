@@ -46,3 +46,24 @@ type Export struct {
 
 func (e Export) Name() string     { return e.name }
 func (e Export) Desc() ExportDesc { return e.desc }
+
+type ImportDesc interface {
+	isImportDesc()
+}
+
+type ImportDescFunc struct {
+	index uint32
+}
+
+func (i ImportDescFunc) isImportDesc() {}
+func (i ImportDescFunc) Index() uint32 { return i.index }
+
+type Import struct {
+	module string
+	name   string
+	desc   ImportDesc
+}
+
+func (i Import) Module() string   { return i.module }
+func (i Import) Name() string     { return i.name }
+func (i Import) Desc() ImportDesc { return i.desc }

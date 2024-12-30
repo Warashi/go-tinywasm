@@ -16,6 +16,7 @@ type Module struct {
 	functionSection []uint32
 	codeSection     []Function
 	exportSection   []Export
+	importSection   []Import
 }
 
 func NewModule(r io.Reader) (*Module, error) {
@@ -26,6 +27,7 @@ func (m *Module) TypeSection() []FuncType   { return m.typeSection }
 func (m *Module) FunctionSection() []uint32 { return m.functionSection }
 func (m *Module) CodeSection() []Function   { return m.codeSection }
 func (m *Module) ExportSection() []Export   { return m.exportSection }
+func (m *Module) ImportSection() []Import   { return m.importSection }
 
 func decode(r io.Reader) (*Module, error) {
 	var (
@@ -74,6 +76,11 @@ func decode(r io.Reader) (*Module, error) {
 			module.exportSection, err = decodeExportSection(sectionContents)
 			if err != nil {
 				return nil, fmt.Errorf("failed to decode export section: %w", err)
+			}
+		case SectionCodeImport:
+			module.importSection, err = decodeImportSection(sectionContents)
+			if err != nil {
+				return nil, fmt.Errorf("failed to decode import section: %w", err)
 			}
 		default:
 			return nil, fmt.Errorf("unsupported section code: %d", code)
@@ -325,6 +332,42 @@ func decodeExportSection(r io.Reader) ([]Export, error) {
 	}
 
 	return exports, nil
+}
+
+func decodeImportSection(r io.Reader) ([]Import, error) {
+	count, err := leb128.Uint32(r)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read import count: %w", err)
+	}
+
+	imports := make([]Import, 0, count)
+
+	for range count {
+		module, err := decodeName(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode import module name: %w", err)
+		}
+		name, err := decodeName(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode import name: %w", err)
+		}
+		kind, err := readByte(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read import kind: %w", err)
+		}
+		switch kind {
+		case 0x00:
+			index, err := leb128.Uint32(r)
+			if err != nil {
+				return nil, fmt.Errorf("failed to read import index: %w", err)
+			}
+			imports = append(imports, Import{module: module, name: name, desc: ImportDescFunc{index: index}})
+		default:
+			return nil, fmt.Errorf("unsupported import kind: %x", kind)
+		}
+	}
+
+	return imports, nil
 }
 
 func decodeName(r io.Reader) (string, error) {
