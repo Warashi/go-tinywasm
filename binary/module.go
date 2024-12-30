@@ -290,44 +290,14 @@ func decodeInstructions(r io.Reader) ([]Instruction, error) {
 			return nil, fmt.Errorf("failed to read opcode: %w", err)
 		}
 
-		switch Opcode(opcode) {
-		case OpcodeEnd:
-			instructions = append(instructions, InstructionEnd{})
-		case OpcodeCall:
-			i := new(InstructionCall)
-			if err := i.ReadFrom(r); err != nil {
-				return nil, fmt.Errorf("failed to read call instruction: %w", err)
-			}
-			instructions = append(instructions, i)
-		case OpcodeLocalGet:
-			i := new(InstructionLocalGet)
-			if err := i.ReadFrom(r); err != nil {
-				return nil, fmt.Errorf("failed to read local.get instruction: %w", err)
-			}
-			instructions = append(instructions, i)
-		case OpcodeLocalSet:
-			i := new(InstructionLocalSet)
-			if err := i.ReadFrom(r); err != nil {
-				return nil, fmt.Errorf("failed to read local.set instruction: %w", err)
-			}
-			instructions = append(instructions, i)
-		case OpcodeI32Store:
-			i := new(InstructionI32Store)
-			if err := i.ReadFrom(r); err != nil {
-				return nil, fmt.Errorf("failed to read i32.store instruction: %w", err)
-			}
-			instructions = append(instructions, i)
-		case OpcodeI32Const:
-			i := new(InstructionI32Const)
-			if err := i.ReadFrom(r); err != nil {
-				return nil, fmt.Errorf("failed to read i32.const instruction: %w", err)
-			}
-			instructions = append(instructions, i)
-		case OpcodeI32Add:
-			instructions = append(instructions, InstructionI32Add{})
-		default:
-			return nil, fmt.Errorf("unsupported opcode: %x", opcode)
+		instruction, err := FromOpcode(Opcode(opcode))
+		if err != nil {
+			return nil, fmt.Errorf("failed to create instruction: %w", err)
 		}
+		if err := instruction.ReadOperandsFrom(r); err != nil {
+			return nil, fmt.Errorf("failed to read operands: %w", err)
+		}
+		instructions = append(instructions, instruction)
 	}
 
 	return instructions, nil

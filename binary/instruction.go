@@ -1,6 +1,7 @@
 package binary
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/Warashi/go-tinywasm/leb128"
@@ -8,51 +9,72 @@ import (
 
 type Instruction interface {
 	Opcode() Opcode
-	ReadFrom(r io.Reader) error
+	ReadOperandsFrom(r io.Reader) error
+}
+
+func FromOpcode(op Opcode) (Instruction, error) {
+	switch op {
+	case OpcodeEnd:
+		return new(InstructionEnd), nil
+	case OpcodeCall:
+		return new(InstructionCall), nil
+	case OpcodeLocalGet:
+		return new(InstructionLocalGet), nil
+	case OpcodeLocalSet:
+		return new(InstructionLocalSet), nil
+	case OpcodeI32Store:
+		return new(InstructionI32Store), nil
+	case OpcodeI32Const:
+		return new(InstructionI32Const), nil
+	case OpcodeI32Add:
+		return new(InstructionI32Add), nil
+	default:
+		return nil, fmt.Errorf("unknown opcode: %v", op)
+	}
 }
 
 type InstructionEnd struct{}
 
-func (InstructionEnd) Opcode() Opcode           { return OpcodeEnd }
-func (InstructionEnd) ReadFrom(io.Reader) error { return nil }
+func (*InstructionEnd) Opcode() Opcode                   { return OpcodeEnd }
+func (*InstructionEnd) ReadOperandsFrom(io.Reader) error { return nil }
 
 type InstructionCall struct{ index uint32 }
 
-func (InstructionCall) Opcode() Opcode { return OpcodeCall }
-func (i *InstructionCall) ReadFrom(r io.Reader) error {
+func (*InstructionCall) Opcode() Opcode { return OpcodeCall }
+func (i *InstructionCall) ReadOperandsFrom(r io.Reader) error {
 	var err error
 	i.index, err = leb128.Uint32(r)
 	return err
 }
-func (i InstructionCall) Index() uint32 { return i.index }
+func (i *InstructionCall) Index() uint32 { return i.index }
 
 type InstructionLocalGet struct{ index uint32 }
 
-func (InstructionLocalGet) Opcode() Opcode { return OpcodeLocalGet }
-func (i *InstructionLocalGet) ReadFrom(r io.Reader) error {
+func (*InstructionLocalGet) Opcode() Opcode { return OpcodeLocalGet }
+func (i *InstructionLocalGet) ReadOperandsFrom(r io.Reader) error {
 	var err error
 	i.index, err = leb128.Uint32(r)
 	return err
 }
-func (i InstructionLocalGet) Index() uint32 { return i.index }
+func (i *InstructionLocalGet) Index() uint32 { return i.index }
 
 type InstructionLocalSet struct{ index uint32 }
 
-func (InstructionLocalSet) Opcode() Opcode { return OpcodeLocalSet }
-func (i *InstructionLocalSet) ReadFrom(r io.Reader) error {
+func (*InstructionLocalSet) Opcode() Opcode { return OpcodeLocalSet }
+func (i *InstructionLocalSet) ReadOperandsFrom(r io.Reader) error {
 	var err error
 	i.index, err = leb128.Uint32(r)
 	return err
 }
-func (i InstructionLocalSet) Index() uint32 { return i.index }
+func (i *InstructionLocalSet) Index() uint32 { return i.index }
 
 type InstructionI32Store struct {
 	align  uint32
 	offset uint32
 }
 
-func (InstructionI32Store) Opcode() Opcode { return OpcodeI32Store }
-func (i *InstructionI32Store) ReadFrom(r io.Reader) error {
+func (*InstructionI32Store) Opcode() Opcode { return OpcodeI32Store }
+func (i *InstructionI32Store) ReadOperandsFrom(r io.Reader) error {
 	var err error
 	i.align, err = leb128.Uint32(r)
 	if err != nil {
@@ -61,20 +83,20 @@ func (i *InstructionI32Store) ReadFrom(r io.Reader) error {
 	i.offset, err = leb128.Uint32(r)
 	return err
 }
-func (i InstructionI32Store) Align() uint32  { return i.align }
-func (i InstructionI32Store) Offset() uint32 { return i.offset }
+func (i *InstructionI32Store) Align() uint32  { return i.align }
+func (i *InstructionI32Store) Offset() uint32 { return i.offset }
 
 type InstructionI32Const struct{ value int32 }
 
-func (InstructionI32Const) Opcode() Opcode { return OpcodeI32Const }
-func (i *InstructionI32Const) ReadFrom(r io.Reader) error {
+func (*InstructionI32Const) Opcode() Opcode { return OpcodeI32Const }
+func (i *InstructionI32Const) ReadOperandsFrom(r io.Reader) error {
 	var err error
 	i.value, err = leb128.Int32(r)
 	return err
 }
-func (i InstructionI32Const) Value() int32 { return i.value }
+func (i *InstructionI32Const) Value() int32 { return i.value }
 
 type InstructionI32Add struct{}
 
-func (InstructionI32Add) Opcode() Opcode           { return OpcodeI32Add }
-func (InstructionI32Add) ReadFrom(io.Reader) error { return nil }
+func (*InstructionI32Add) Opcode() Opcode                   { return OpcodeI32Add }
+func (*InstructionI32Add) ReadOperandsFrom(io.Reader) error { return nil }

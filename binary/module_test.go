@@ -56,7 +56,7 @@ func TestDecodeMinimalFunc(t *testing.T) {
 		codeSection: []Function{
 			{
 				locals: []FunctionLocal{},
-				code:   []Instruction{InstructionEnd{}},
+				code:   []Instruction{&InstructionEnd{}},
 			},
 		},
 	}
@@ -92,7 +92,7 @@ func TestDecodeFuncParam(t *testing.T) {
 		codeSection: []Function{
 			{
 				locals: []FunctionLocal{},
-				code:   []Instruction{InstructionEnd{}},
+				code:   []Instruction{&InstructionEnd{}},
 			},
 		},
 	}
@@ -132,7 +132,7 @@ func TestDecodeFuncLocal(t *testing.T) {
 					{typeCount: 1, valueType: ValueTypeI32},
 					{typeCount: 2, valueType: ValueTypeI64},
 				},
-				code: []Instruction{InstructionEnd{}},
+				code: []Instruction{&InstructionEnd{}},
 			},
 		},
 	}
@@ -172,8 +172,8 @@ func TestDecodeFuncAdd(t *testing.T) {
 				code: []Instruction{
 					&InstructionLocalGet{index: 0},
 					&InstructionLocalGet{index: 1},
-					InstructionI32Add{},
-					InstructionEnd{},
+					&InstructionI32Add{},
+					&InstructionEnd{},
 				},
 			},
 		},
@@ -220,7 +220,7 @@ func TestDecodeFuncCall(t *testing.T) {
 				code: []Instruction{
 					&InstructionLocalGet{index: 0},
 					&InstructionCall{index: 1},
-					InstructionEnd{},
+					&InstructionEnd{},
 				},
 			},
 			{
@@ -228,8 +228,8 @@ func TestDecodeFuncCall(t *testing.T) {
 				code: []Instruction{
 					&InstructionLocalGet{index: 0},
 					&InstructionLocalGet{index: 0},
-					InstructionI32Add{},
-					InstructionEnd{},
+					&InstructionI32Add{},
+					&InstructionEnd{},
 				},
 			},
 		},
@@ -289,7 +289,7 @@ func TestDecodeImport(t *testing.T) {
 				code: []Instruction{
 					&InstructionLocalGet{index: 0},
 					&InstructionCall{index: 0},
-					InstructionEnd{},
+					&InstructionEnd{},
 				},
 			},
 		},

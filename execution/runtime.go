@@ -134,7 +134,7 @@ func (r *Runtime) execute() error {
 		inst := frame.instructions[frame.programCounter]
 
 		switch inst := inst.(type) {
-		case binary.InstructionEnd:
+		case *binary.InstructionEnd:
 			if r.callStack.len() < 1 {
 				return fmt.Errorf("call stack underflow")
 			}
@@ -184,7 +184,7 @@ func (r *Runtime) execute() error {
 			}
 		case *binary.InstructionI32Const:
 			r.stack.push(ValueI32(inst.Value()))
-		case binary.InstructionI32Add:
+		case *binary.InstructionI32Add:
 			if r.stack.len() < 2 {
 				return fmt.Errorf("stack underflow")
 			}
