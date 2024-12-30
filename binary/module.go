@@ -13,6 +13,7 @@ type Module struct {
 	magic           string
 	version         uint32
 	memorySection   []Memory
+	dataSection     []Data
 	typeSection     []FuncType
 	functionSection []uint32
 	codeSection     []Function
@@ -25,6 +26,7 @@ func NewModule(r io.Reader) (*Module, error) {
 }
 
 func (m *Module) MemorySection() []Memory   { return m.memorySection }
+func (m *Module) DataSection() []Data       { return m.dataSection }
 func (m *Module) TypeSection() []FuncType   { return m.typeSection }
 func (m *Module) FunctionSection() []uint32 { return m.functionSection }
 func (m *Module) CodeSection() []Function   { return m.codeSection }
@@ -88,6 +90,11 @@ func decode(r io.Reader) (*Module, error) {
 			module.codeSection, err = decodeCodeSection(sectionContents)
 			if err != nil {
 				return nil, fmt.Errorf("failed to decode code section: %w", err)
+			}
+		case SectionCodeData:
+			module.dataSection, err = decodeDataSection(sectionContents)
+			if err != nil {
+				return nil, fmt.Errorf("failed to decode data section: %w", err)
 			}
 		default:
 			return nil, fmt.Errorf("unsupported section code: %d", code)
@@ -450,4 +457,55 @@ func decodeName(r io.Reader) (string, error) {
 	}
 
 	return string(name), nil
+}
+
+// TODO: implement expr decoding
+func decodeExpr(r io.Reader) (uint32, error) {
+	if _, err := leb128.Uint32(r); err != nil {
+		return 0, fmt.Errorf("failed to read expr size: %w", err)
+	}
+	offset, err := leb128.Uint32(r)
+	if err != nil {
+		return 0, fmt.Errorf("failed to read expr offset: %w", err)
+
+	}
+	if _, err := leb128.Uint32(r); err != nil {
+		return 0, fmt.Errorf("failed to read expr end: %w", err)
+	}
+	return offset, nil
+}
+
+func decodeDataSection(r io.Reader) ([]Data, error) {
+	count, err := leb128.Uint32(r)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read data count: %w", err)
+	}
+
+	data := make([]Data, 0, count)
+
+	for range count {
+		memoryIndex, err := leb128.Uint32(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read memory index: %w", err)
+		}
+		offset, err := decodeExpr(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read offset: %w", err)
+		}
+		size, err := leb128.Uint32(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read data size: %w", err)
+		}
+		rest, err := take(size)(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to take data: %w", err)
+		}
+		init, err := io.ReadAll(rest)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read data: %w", err)
+		}
+		data = append(data, Data{memoryIndex: memoryIndex, offset: offset, init: init})
+	}
+
+	return data, nil
 }

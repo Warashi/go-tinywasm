@@ -81,3 +81,13 @@ type Memory struct {
 }
 
 func (m Memory) Limits() Limits { return m.limits }
+
+type Data struct {
+	memoryIndex uint32
+	offset      uint32
+	init        []byte
+}
+
+func (d Data) MemoryIndex() uint32 { return d.memoryIndex }
+func (d Data) Offset() uint32      { return d.offset }
+func (d Data) Init() []byte        { return d.init }

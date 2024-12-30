@@ -7,9 +7,12 @@ import (
 	"github.com/Warashi/go-tinywasm/binary"
 )
 
+const PageSize = 65536 // 64 Ki
+
 type Store struct {
-	funcs  []FuncInst
-	module ModuleInst
+	funcs    []FuncInst
+	module   ModuleInst
+	memories []MemoryInst
 }
 
 type FuncInst interface {
@@ -43,6 +46,11 @@ type ExportInst struct {
 
 type ModuleInst struct {
 	exports map[string]ExportInst
+}
+
+type MemoryInst struct {
+	data []byte
+	max  uint32
 }
 
 func NewStore(module *binary.Module) (*Store, error) {
@@ -94,8 +102,26 @@ func NewStore(module *binary.Module) (*Store, error) {
 		}
 	}
 
+	memories := make([]MemoryInst, 0, len(module.MemorySection()))
+	for _, memory := range module.MemorySection() {
+		mem := MemoryInst{
+			data: make([]byte, memory.Limits().Min()*PageSize),
+			max:  memory.Limits().Max(),
+		}
+		memories = append(memories, mem)
+	}
+
+	for _, data := range module.DataSection() {
+		memory := memories[data.MemoryIndex()]
+		if int(data.Offset())+len(data.Init()) > len(memory.data) {
+			return nil, fmt.Errorf("data segment does not fit in memory")
+		}
+		copy(memory.data[data.Offset():], data.Init())
+	}
+
 	return &Store{
-		funcs: funcs,
+		funcs:    funcs,
+		memories: memories,
 		module: ModuleInst{
 			exports: exports,
 		},
