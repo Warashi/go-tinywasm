@@ -374,3 +374,54 @@ func TestI32LessThan(t *testing.T) {
 		})
 	}
 }
+
+func TestFib(t *testing.T) {
+	t.Parallel()
+
+	b, err := os.ReadFile("../testdata/fib.wasm")
+	if err != nil {
+		t.Errorf("failed to load testdata: %v", err)
+		t.FailNow()
+	}
+
+	runtime, err := execution.NewRuntime(bytes.NewReader(b))
+	if err != nil {
+		t.Errorf("failed to create runtime: %v", err)
+		t.FailNow()
+	}
+
+	tests := []struct {
+		n, want int32
+	}{
+		{1, 1},
+		{2, 2},
+		{3, 3},
+		{4, 5},
+		{5, 8},
+		{6, 13},
+		{7, 21},
+		{8, 34},
+		{9, 55},
+		{10, 89},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("fib(%d)=%d", test.n, test.want), func(t *testing.T) {
+			args := []execution.Value{
+				execution.ValueI32(test.n),
+			}
+			got, err := runtime.Call("fib", args)
+			if err != nil {
+				t.Errorf("failed to call function: %v", err)
+				t.FailNow()
+			}
+			if len(got) != 1 {
+				t.Errorf("unexpected number of return values: %d", len(got))
+				t.FailNow()
+			}
+			if got, ok := got[0].(execution.ValueI32); !ok || got != execution.ValueI32(test.want) {
+				t.Errorf("unexpected return value: %v", got)
+			}
+		})
+	}
+}

@@ -96,6 +96,8 @@ type Block struct {
 	blockType BlockType
 }
 
+func (b Block) BlockType() BlockType { return b.blockType }
+
 type BlockType interface {
 	isBlockType()
 	ResultCount() int

@@ -104,6 +104,21 @@ func LessThan(a, b Value) (Value, error) {
 	return nil, fmt.Errorf("unsupported type %T", a)
 }
 
+type LabelKind int
+
+const (
+	LabelKindBlock LabelKind = iota
+	LabelKindLoop
+	LabelKindIf
+)
+
+type Label struct {
+	kind           LabelKind
+	programCounter int
+	stackPointer   int
+	arity          int
+}
+
 func writeValue(buf []byte, v Value) (int, error) {
 	switch v := v.(type) {
 	case ValueI32:

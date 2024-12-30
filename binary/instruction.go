@@ -51,6 +51,7 @@ func (i *InstructionIf) ReadOperandsFrom(r io.Reader) error {
 	i.block, err = decodeBlock(r)
 	return err
 }
+func (i *InstructionIf) Block() Block { return i.block }
 
 type InstructionEnd struct{}
 

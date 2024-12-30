@@ -3,6 +3,8 @@ package execution
 import (
 	"fmt"
 	"io"
+	"log"
+	"slices"
 
 	"github.com/Warashi/go-tinywasm/binary"
 )
@@ -12,6 +14,7 @@ type Frame struct {
 	stackPointer   int
 	instructions   []binary.Instruction
 	arity          int
+	labels         stack[Label]
 	locals         []Value
 }
 
@@ -36,7 +39,7 @@ func (s *stack[T]) drain(n int) []T {
 func (s *stack[T]) splitOff(n int) stack[T] {
 	r := (*s)[n:]
 	*s = (*s)[:n]
-	return r
+	return slices.Clone(r)
 }
 
 func (s *stack[T]) len() int {
@@ -131,14 +134,52 @@ func (r *Runtime) execute() error {
 			break
 		}
 
-		inst := frame.instructions[frame.programCounter]
+		log.Println("stack", r.stack)
+		log.Printf("inst: %x", frame.instructions[frame.programCounter].Opcode())
 
-		switch inst := inst.(type) {
+		switch inst := frame.instructions[frame.programCounter].(type) {
+		case *binary.InstructionIf:
+			if r.stack.len() < 1 {
+				return fmt.Errorf("stack underflow")
+			}
+
+			condition := r.stack.pop()
+
+			nextProgramCounter, err := r.getEndAddress(frame.instructions, frame.programCounter)
+			if err != nil {
+				return fmt.Errorf("failed to get end address: %w", err)
+			}
+
+			if condition == ValueI32(0) {
+				frame.programCounter = nextProgramCounter
+			}
+
+			frame.labels.push(Label{
+				kind:           LabelKindIf,
+				programCounter: nextProgramCounter,
+				stackPointer:   r.stack.len(),
+				arity:          inst.Block().BlockType().ResultCount(),
+			})
 		case *binary.InstructionEnd:
+			if frame.labels.len() > 0 {
+				label := frame.labels.pop()
+				frame.programCounter = label.programCounter
+				if err := r.stackUnwind(label.stackPointer, label.arity); err != nil {
+					return fmt.Errorf("failed to unwind stack: %w", err)
+				}
+			} else {
+				if r.callStack.len() < 1 {
+					return fmt.Errorf("call stack underflow")
+				}
+				frame := r.callStack.pop()
+				if err := r.stackUnwind(frame.stackPointer, frame.arity); err != nil {
+					return fmt.Errorf("failed to unwind stack: %w", err)
+				}
+			}
+		case *binary.InstructionReturn:
 			if r.callStack.len() < 1 {
 				return fmt.Errorf("call stack underflow")
 			}
-
 			frame := r.callStack.pop()
 			if err := r.stackUnwind(frame.stackPointer, frame.arity); err != nil {
 				return fmt.Errorf("failed to unwind stack: %w", err)
@@ -320,6 +361,28 @@ func (r *Runtime) invokeExternal(f ExternalFuncInst) ([]Value, error) {
 		return nil, fmt.Errorf("function not found: %s", f.fn)
 	}
 	return fn(r.store, args...)
+}
+
+func (r *Runtime) getEndAddress(insts []binary.Instruction, programCounter int) (int, error) {
+	depth := 0
+	for {
+		programCounter++
+		if programCounter < 0 || len(insts) <= programCounter {
+			return 0, fmt.Errorf("unexpected end of instructions")
+		}
+
+		switch insts[programCounter].(type) {
+		case *binary.InstructionIf:
+			depth++
+		case *binary.InstructionEnd:
+			if depth == 0 {
+				return programCounter, nil
+			}
+			depth--
+		default:
+			// do nothing
+		}
+	}
 }
 
 func (r *Runtime) cleanup() {
