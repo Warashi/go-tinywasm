@@ -33,6 +33,12 @@ func (s *stack[T]) drain(n int) []T {
 	return r
 }
 
+func (s *stack[T]) splitOff(n int) stack[T] {
+	r := (*s)[len(*s)-n:]
+	*s = (*s)[:len(*s)-n]
+	return r
+}
+
 func (s *stack[T]) len() int {
 	return len(*s)
 }
@@ -126,4 +132,46 @@ func (r *Runtime) stackUnwind(stackPointer, arity int) error {
 	}
 
 	return nil
+}
+
+func (r *Runtime) invokeInternal(f InternalFuncInst) ([]Value, error) {
+	bottom := r.stack.len() - len(f.funcType.Params())
+	locals := r.stack.splitOff(bottom)
+
+	for _, local := range f.code.locals {
+		switch local {
+		case binary.ValueTypeI32:
+			locals.push(ValueI32(0))
+		case binary.ValueTypeI64:
+			locals.push(ValueI64(0))
+		}
+	}
+
+	arity := len(f.funcType.Results())
+
+	frame := Frame{
+		programCounter: -1,
+		stackPointer:   r.stack.len(),
+		instructions:   f.code.body,
+		arity:          arity,
+		locals:         locals,
+	}
+
+	r.callStack.push(frame)
+
+	if err := r.execute(); err != nil {
+		r.cleanup()
+		return nil, fmt.Errorf("failed to execute: %w", err)
+	}
+
+	if arity < 1 {
+		return nil, nil
+	}
+
+	return r.stack.drain(r.stack.len() - bottom), nil
+}
+
+func (r *Runtime) cleanup() {
+	r.callStack = nil
+	r.stack = nil
 }

@@ -29,9 +29,9 @@ func (t ValueType) String() string {
 func ValueFrom(v any) (Value, error) {
 	switch v := v.(type) {
 	case int32:
-		return I32(v), nil
+		return ValueI32(v), nil
 	case int64:
-		return I64(v), nil
+		return ValueI64(v), nil
 	}
 	return nil, fmt.Errorf("unsupported type %T", v)
 }
@@ -40,23 +40,23 @@ type Value interface {
 	Type() ValueType
 }
 
-type I32 int32
+type ValueI32 int32
 
-func (I32) Type() ValueType { return ValueTypeI32 }
+func (ValueI32) Type() ValueType { return ValueTypeI32 }
 
-type I64 int64
+type ValueI64 int64
 
-func (I64) Type() ValueType { return ValueTypeI64 }
+func (ValueI64) Type() ValueType { return ValueTypeI64 }
 
 func Add(a, b Value) (Value, error) {
 	if a.Type() != b.Type() {
 		return nil, fmt.Errorf("type mismatch: %v + %v", a.Type(), b.Type())
 	}
 	switch a := a.(type) {
-	case I32:
-		return I32(a + b.(I32)), nil
-	case I64:
-		return I64(a + b.(I64)), nil
+	case ValueI32:
+		return ValueI32(a + b.(ValueI32)), nil
+	case ValueI64:
+		return ValueI64(a + b.(ValueI64)), nil
 	}
 
 	return nil, fmt.Errorf("unsupported type %T", a)
