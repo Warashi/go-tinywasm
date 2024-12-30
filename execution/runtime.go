@@ -195,6 +195,17 @@ func (r *Runtime) execute() error {
 				return fmt.Errorf("failed to add: %w", err)
 			}
 			r.stack.push(result)
+		case *binary.InstructionI32Sub:
+			if r.stack.len() < 2 {
+				return fmt.Errorf("stack underflow")
+			}
+			right, left := r.stack.pop(), r.stack.pop()
+
+			result, err := Sub(left, right)
+			if err != nil {
+				return fmt.Errorf("failed to sub: %w", err)
+			}
+			r.stack.push(result)
 		default:
 			return fmt.Errorf("unsupported instruction: %T", inst)
 		}

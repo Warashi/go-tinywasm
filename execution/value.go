@@ -65,6 +65,20 @@ func Add(a, b Value) (Value, error) {
 	return nil, fmt.Errorf("unsupported type %T", a)
 }
 
+func Sub(a, b Value) (Value, error) {
+	if a.Type() != b.Type() {
+		return nil, fmt.Errorf("type mismatch: %v - %v", a.Type(), b.Type())
+	}
+	switch a := a.(type) {
+	case ValueI32:
+		return ValueI32(a - b.(ValueI32)), nil
+	case ValueI64:
+		return ValueI64(a - b.(ValueI64)), nil
+	}
+
+	return nil, fmt.Errorf("unsupported type %T", a)
+}
+
 func writeValue(buf []byte, v Value) (int, error) {
 	switch v := v.(type) {
 	case ValueI32:
