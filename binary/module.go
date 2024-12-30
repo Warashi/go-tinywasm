@@ -22,17 +22,10 @@ func NewModule(r io.Reader) (*Module, error) {
 	return decode(r)
 }
 
-func (m *Module) TypeSection() []FuncType {
-	return m.typeSection
-}
-
-func (m *Module) FunctionSection() []uint32 {
-	return m.functionSection
-}
-
-func (m *Module) CodeSection() []Function {
-	return m.codeSection
-}
+func (m *Module) TypeSection() []FuncType   { return m.typeSection }
+func (m *Module) FunctionSection() []uint32 { return m.functionSection }
+func (m *Module) CodeSection() []Function   { return m.codeSection }
+func (m *Module) ExportSection() []Export   { return m.exportSection }
 
 func decode(r io.Reader) (*Module, error) {
 	var (
