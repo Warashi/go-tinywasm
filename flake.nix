@@ -22,7 +22,9 @@
         devShells.default =
           with pkgs;
           mkShell {
+            GOTOOLCHAIN = "local";
             buildInputs = [
+              go
               wabt
             ];
           };
