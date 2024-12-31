@@ -46,8 +46,8 @@ func (i *I32Load) Execute(r runtime.Runtime, f *runtime.Frame) error {
 	}
 
 	var buf [4]byte
-	if n, err := r.ReadMemoryAt(0, buf[:], int64(uint32(a)+i.offset)); err != nil || n != 4 {
-		return fmt.Errorf("failed to write memory(%d): %w", n, err)
+	if n, err := r.ReadMemoryAt(0, buf[:], int64(uint32(a)+i.offset)); err != nil || n != len(buf) {
+		return fmt.Errorf("failed to read memory(%d): %w", n, err)
 	}
 
 	var result int32
@@ -96,8 +96,8 @@ func (i *I32Load8U) Execute(r runtime.Runtime, f *runtime.Frame) error {
 	}
 
 	var buf [1]byte
-	if n, err := r.ReadMemoryAt(0, buf[:], int64(uint32(a)+i.offset)); err != nil || n != 4 {
-		return fmt.Errorf("failed to write memory(%d): %w", n, err)
+	if n, err := r.ReadMemoryAt(0, buf[:], int64(uint32(a)+i.offset)); err != nil || n != len(buf) {
+		return fmt.Errorf("failed to read memory(%d): %w", n, err)
 	}
 
 	var result uint8

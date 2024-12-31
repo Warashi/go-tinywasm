@@ -26,6 +26,8 @@ type ValueType byte
 const (
 	ValueTypeI32 ValueType = 0x7f
 	ValueTypeI64 ValueType = 0x7e
+	ValueTypeF32 ValueType = 0x7d
+	ValueTypeF64 ValueType = 0x7c
 )
 
 type FunctionLocal struct {

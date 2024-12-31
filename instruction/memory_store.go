@@ -55,7 +55,7 @@ func (i *I32Store) Execute(r runtime.Runtime, f *runtime.Frame) error {
 		return fmt.Errorf("failed to encode value: %w", err)
 	}
 
-	if n, err := r.WriteMemoryAt(0, buf[:], int64(uint32(a)+i.offset)); err != nil || n != 4 {
+	if n, err := r.WriteMemoryAt(0, buf[:], int64(uint32(a)+i.offset)); err != nil || n != len(buf) {
 		return fmt.Errorf("failed to write memory(%d): %w", n, err)
 	}
 
@@ -108,7 +108,7 @@ func (i *I32Store8) Execute(r runtime.Runtime, f *runtime.Frame) error {
 		return fmt.Errorf("failed to encode value: %w", err)
 	}
 
-	if n, err := r.WriteMemoryAt(0, buf[:], int64(uint32(a)+i.offset)); err != nil || n != 1 {
+	if n, err := r.WriteMemoryAt(0, buf[:], int64(uint32(a)+i.offset)); err != nil || n != len(buf) {
 		return fmt.Errorf("failed to write memory(%d): %w", n, err)
 	}
 

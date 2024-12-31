@@ -82,6 +82,28 @@ func NewStore(module *binary.Module) (*Store, error) {
 		memories = append(memories, mem)
 	}
 
+	globals := make([]runtime.GlobalInst, 0, len(module.GlobalSection()))
+	for _, global := range module.GlobalSection() {
+		var v runtime.Value
+		switch global.ValueType {
+		case tbinary.ValueTypeI32:
+			v = runtime.ValueI32(0)
+		case tbinary.ValueTypeI64:
+			v = runtime.ValueI64(0)
+		case tbinary.ValueTypeF32:
+			v = runtime.ValueF32(0)
+		case tbinary.ValueTypeF64:
+			v = runtime.ValueF64(0)
+		default:
+			return nil, fmt.Errorf("unsupported global type: %v", global.ValueType)
+		}
+
+		globals = append(globals, runtime.GlobalInst{
+			Value: v,
+			Mut:   global.Mutable,
+		})
+	}
+
 	for _, data := range module.DataSection() {
 		memory := memories[data.MemoryIndex]
 		if int(data.Offset)+len(data.Init) > len(memory.Data) {
@@ -93,6 +115,7 @@ func NewStore(module *binary.Module) (*Store, error) {
 	return &Store{
 		funcs:    funcs,
 		memories: memories,
+		globals:  globals,
 		module: runtime.ModuleInst{
 			Exports: exports,
 		},
