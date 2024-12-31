@@ -38,12 +38,12 @@ func (i *I32Store) ReadOperandsFrom(r io.Reader) error {
 }
 
 func (i *I32Store) Execute(r runtime.Runtime, f *runtime.Frame) error {
-	_, err := r.PopStack()
+	value, err := r.PopStack()
 	if err != nil {
 		return err
 	}
 
-	value, err := r.PopStack()
+	addr, err := r.PopStack()
 	if err != nil {
 		return err
 	}
@@ -53,13 +53,18 @@ func (i *I32Store) Execute(r runtime.Runtime, f *runtime.Frame) error {
 		return runtime.ErrInvalidValue
 	}
 
+	a, ok := addr.(runtime.ValueI32)
+	if !ok {
+		return runtime.ErrInvalidValue
+	}
+
 	var buf [4]byte
 	if _, err := binary.Encode(buf[:], endian, int32(v)); err != nil {
 		return fmt.Errorf("failed to encode value: %w", err)
 	}
 
-	if _, err := r.WriteMemoryAt(0, buf[:], int64(i.offset)); err != nil {
-		return fmt.Errorf("failed to write memory: %w", err)
+	if n, err := r.WriteMemoryAt(0, buf[:], int64(uint32(a)+i.offset)); err != nil || n != 4 {
+		return fmt.Errorf("failed to write memory(%d): %w", n, err)
 	}
 
 	return nil

@@ -279,7 +279,7 @@ func TestI32Store(t *testing.T) {
 
 	memory := runtime.Store().Memories()[0].Data
 	if memory[0] != 42 {
-		t.Errorf("unexpected memory content: %v", memory)
+		t.Errorf("unexpected memory content: %v", memory[0])
 	}
 }
 

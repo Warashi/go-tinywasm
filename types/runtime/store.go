@@ -1,6 +1,8 @@
 package runtime
 
-import "github.com/Warashi/go-tinywasm/types/binary"
+import (
+	"github.com/Warashi/go-tinywasm/types/binary"
+)
 
 type FuncInst interface {
 	isFuncInst()
