@@ -6,6 +6,7 @@ import (
 
 	"github.com/Warashi/go-tinywasm/binary"
 	tbinary "github.com/Warashi/go-tinywasm/types/binary"
+	"github.com/Warashi/go-tinywasm/types/instruction"
 	"github.com/Warashi/go-tinywasm/types/runtime"
 )
 
@@ -47,11 +48,16 @@ func NewStore(module *binary.Module) (*Store, error) {
 			locals = append(locals, local.ValueType)
 		}
 
+		insts, err := instruction.Convert(body.Code)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert instructions: %w", err)
+		}
+
 		funcInst := runtime.InternalFuncInst{
 			FuncType: funcType,
 			Code: runtime.Func{
 				Locals: locals,
-				Body:   body.Code,
+				Body:   insts,
 			},
 		}
 
