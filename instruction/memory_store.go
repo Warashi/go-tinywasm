@@ -63,3 +63,54 @@ func (i *I32Store) Execute(r runtime.Runtime, f *runtime.Frame) error {
 }
 
 // TODO: implement the rest of the store instructions
+type I32Store8 struct {
+	align  uint32
+	offset uint32
+}
+
+func (i *I32Store8) Opcode() opcode.Opcode {
+	return opcode.OpcodeI32Store8
+}
+
+func (i *I32Store8) ReadOperandsFrom(r io.Reader) error {
+	var err error
+	i.align, err = leb128.Uint32(r)
+	if err != nil {
+		return err
+	}
+	i.offset, err = leb128.Uint32(r)
+	return err
+}
+
+func (i *I32Store8) Execute(r runtime.Runtime, f *runtime.Frame) error {
+	value, err := r.PopStack()
+	if err != nil {
+		return err
+	}
+
+	addr, err := r.PopStack()
+	if err != nil {
+		return err
+	}
+
+	v, ok := value.(runtime.ValueI32)
+	if !ok {
+		return runtime.ErrInvalidValue
+	}
+
+	a, ok := addr.(runtime.ValueI32)
+	if !ok {
+		return runtime.ErrInvalidValue
+	}
+
+	var buf [1]byte
+	if _, err := binary.Encode(buf[:], endian, int8(v)); err != nil {
+		return fmt.Errorf("failed to encode value: %w", err)
+	}
+
+	if n, err := r.WriteMemoryAt(0, buf[:], int64(uint32(a)+i.offset)); err != nil || n != 1 {
+		return fmt.Errorf("failed to write memory(%d): %w", n, err)
+	}
+
+	return nil
+}
