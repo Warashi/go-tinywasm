@@ -62,7 +62,7 @@ type Memory struct {
 
 type Data struct {
 	MemoryIndex uint32
-	Offset      uint32
+	Offset      Expr
 	Init        []byte
 }
 

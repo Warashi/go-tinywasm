@@ -21,7 +21,7 @@ type Module struct {
 	exportSection   []binary.Export
 	importSection   []binary.Import
 	tableSection    []binary.TableType
-	globalSection   []binary.GlobalType
+	globalSection   []binary.Global
 	startSection    *uint32
 }
 
@@ -29,15 +29,15 @@ func NewModule(r io.Reader) (*Module, error) {
 	return decode(r)
 }
 
-func (m *Module) MemorySection() []binary.Memory     { return m.memorySection }
-func (m *Module) DataSection() []binary.Data         { return m.dataSection }
-func (m *Module) TypeSection() []binary.FuncType     { return m.typeSection }
-func (m *Module) FunctionSection() []uint32          { return m.functionSection }
-func (m *Module) TableSection() []binary.TableType   { return m.tableSection }
-func (m *Module) CodeSection() []binary.Function     { return m.codeSection }
-func (m *Module) ExportSection() []binary.Export     { return m.exportSection }
-func (m *Module) ImportSection() []binary.Import     { return m.importSection }
-func (m *Module) GlobalSection() []binary.GlobalType { return m.globalSection }
+func (m *Module) MemorySection() []binary.Memory   { return m.memorySection }
+func (m *Module) DataSection() []binary.Data       { return m.dataSection }
+func (m *Module) TypeSection() []binary.FuncType   { return m.typeSection }
+func (m *Module) FunctionSection() []uint32        { return m.functionSection }
+func (m *Module) TableSection() []binary.TableType { return m.tableSection }
+func (m *Module) CodeSection() []binary.Function   { return m.codeSection }
+func (m *Module) ExportSection() []binary.Export   { return m.exportSection }
+func (m *Module) ImportSection() []binary.Import   { return m.importSection }
+func (m *Module) GlobalSection() []binary.Global   { return m.globalSection }
 
 func decode(r io.Reader) (*Module, error) {
 	var (
@@ -127,16 +127,6 @@ func decode(r io.Reader) (*Module, error) {
 	}
 
 	return module, nil
-}
-
-func readByte(r io.Reader) (byte, error) {
-	var (
-		b [1]byte
-	)
-	if _, err := io.ReadFull(r, b[:]); err != nil {
-		return 0, fmt.Errorf("failed to read byte: %w", err)
-	}
-	return b[0], nil
 }
 
 func decodePreamble(r io.Reader) (string, uint32, error) {
@@ -460,20 +450,104 @@ func decodeName(r io.Reader) (string, error) {
 	return string(name), nil
 }
 
-// TODO: implement expr decoding
-func decodeExpr(r io.Reader) (uint32, error) {
-	if _, err := leb128.Uint32(r); err != nil {
-		return 0, fmt.Errorf("failed to read expr size: %w", err)
-	}
-	offset, err := leb128.Uint32(r)
+func decodeExprValue(r io.Reader) (binary.ExprValue, error) {
+	b, err := readByte(r)
 	if err != nil {
-		return 0, fmt.Errorf("failed to read expr offset: %w", err)
+		return nil, fmt.Errorf("failed to read expr opcode: %w", err)
+	}
+	var value binary.ExprValue
+	switch opcode.Opcode(b) {
+	case opcode.OpcodeI32Const:
+		v, err := leb128.Int32(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read i32.const value: %w", err)
+		}
+		value = binary.ExprValueConstI32(v)
+	case opcode.OpcodeI64Const:
+		v, err := leb128.Int64(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read i64.const value: %w", err)
+		}
+		value = binary.ExprValueConstI64(v)
+	case opcode.OpcodeF32Const:
+		v, err := readF32(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read f32.const value: %w", err)
+		}
+		value = binary.ExprValueConstF32(v)
+	case opcode.OpcodeF64Const:
+		v, err := readF64(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read f64.const value: %w", err)
+		}
+		value = binary.ExprValueConstF64(v)
+	default:
+		return nil, fmt.Errorf("unsupported expr opcode: %v", opcode.Opcode(b))
+	}
 
+	b, err = readByte(r)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read expr end opcode: %w", err)
 	}
-	if _, err := leb128.Uint32(r); err != nil {
-		return 0, fmt.Errorf("failed to read expr end: %w", err)
+
+	if opcode.Opcode(b) != opcode.OpcodeEnd {
+		return nil, fmt.Errorf("invalid expr end opcode: %v", opcode.Opcode(b))
 	}
-	return offset, nil
+
+	return value, nil
+}
+
+func decodeExpr(r io.Reader) (binary.Expr, error) {
+	b, err := readByte(r)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read expr opcode: %w", err)
+	}
+	var value binary.Expr
+	switch opcode.Opcode(b) {
+	case opcode.OpcodeI32Const:
+		v, err := leb128.Int32(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read i32.const value: %w", err)
+		}
+		value = binary.ExprValueConstI32(v)
+	case opcode.OpcodeI64Const:
+		v, err := leb128.Int64(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read i64.const value: %w", err)
+		}
+		value = binary.ExprValueConstI64(v)
+	case opcode.OpcodeF32Const:
+		v, err := readF32(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read f32.const value: %w", err)
+		}
+		value = binary.ExprValueConstF32(v)
+	case opcode.OpcodeF64Const:
+		v, err := readF64(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read f64.const value: %w", err)
+		}
+		value = binary.ExprValueConstF64(v)
+	case opcode.OpcodeGlobalGet:
+		v, err := leb128.Uint32(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read global index: %w", err)
+		}
+		value = binary.ExprGlobalIndex(v)
+	default:
+		return nil, fmt.Errorf("unsupported expr opcode: %s", opcode.Opcode(b))
+	}
+
+	b, err = readByte(r)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read expr end opcode: %w", err)
+	}
+
+	if opcode.Opcode(b) != opcode.OpcodeEnd {
+		return nil, fmt.Errorf("invalid expr end opcode: %s", opcode.Opcode(b))
+	}
+
+	return value, nil
 }
 
 func decodeDataSection(r io.Reader) ([]binary.Data, error) {
@@ -534,28 +608,44 @@ func decodeTableSection(r io.Reader) ([]binary.TableType, error) {
 	return tables, nil
 }
 
-func decodeGlobalSection(r io.Reader) ([]binary.GlobalType, error) {
+func decodeGlobalSection(r io.Reader) ([]binary.Global, error) {
 	count, err := leb128.Uint32(r)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read global count: %w", err)
 	}
 
-	globals := make([]binary.GlobalType, 0, count)
+	globals := make([]binary.Global, 0, count)
 
 	for range count {
-		typ, err := readByte(r)
+		globalType, err := decodeGlobalType(r)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read global type: %w", err)
-		}
-		mut, err := readByte(r)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read global mutability: %w", err)
+			return nil, fmt.Errorf("failed to decode global type: %w", err)
 		}
 
-		globals = append(globals, binary.GlobalType{ValueType: binary.ValueType(typ), Mutable: mut == 0x01})
+		initExpr, err := decodeExprValue(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode global init expr: %w", err)
+		}
+
+		globals = append(globals, binary.Global{
+			Type:     globalType,
+			InitExpr: initExpr,
+		})
 	}
 
 	return globals, nil
+}
+
+func decodeGlobalType(r io.Reader) (binary.GlobalType, error) {
+	typ, err := readByte(r)
+	if err != nil {
+		return binary.GlobalType{}, fmt.Errorf("failed to read global type: %w", err)
+	}
+	mut, err := readByte(r)
+	if err != nil {
+		return binary.GlobalType{}, fmt.Errorf("failed to read global mutability: %w", err)
+	}
+	return binary.GlobalType{ValueType: binary.ValueType(typ), Mutable: mut == 0x01}, nil
 }
 
 func decodeStartSection(r io.Reader) (*uint32, error) {

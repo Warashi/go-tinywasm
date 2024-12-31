@@ -85,31 +85,49 @@ func NewStore(module *binary.Module) (*Store, error) {
 	globals := make([]runtime.GlobalInst, 0, len(module.GlobalSection()))
 	for _, global := range module.GlobalSection() {
 		var v runtime.Value
-		switch global.ValueType {
-		case tbinary.ValueTypeI32:
-			v = runtime.ValueI32(0)
-		case tbinary.ValueTypeI64:
-			v = runtime.ValueI64(0)
-		case tbinary.ValueTypeF32:
-			v = runtime.ValueF32(0)
-		case tbinary.ValueTypeF64:
-			v = runtime.ValueF64(0)
+		switch expr := global.InitExpr.(type) {
+		case tbinary.ExprValueConstI32:
+			v = runtime.ValueI32(expr)
+		case tbinary.ExprValueConstI64:
+			v = runtime.ValueI64(expr)
+		case tbinary.ExprValueConstF32:
+			v = runtime.ValueF32(expr)
+		case tbinary.ExprValueConstF64:
+			v = runtime.ValueF64(expr)
 		default:
-			return nil, fmt.Errorf("unsupported global type: %v", global.ValueType)
+			return nil, fmt.Errorf("unsupported global type: %T", expr)
 		}
 
 		globals = append(globals, runtime.GlobalInst{
-			Value: v,
-			Mut:   global.Mutable,
+			Value:   v,
+			Mutable: global.Type.Mutable,
 		})
+	}
+
+	eval := func(expr tbinary.Expr) (int, error) {
+		switch expr := expr.(type) {
+		case tbinary.ExprValue:
+			return expr.Int(), nil
+		case tbinary.ExprGlobalIndex:
+			if expr < 0 || len(globals) <= int(expr) {
+				return 0, fmt.Errorf("invalid global index: %d", expr)
+			}
+			return globals[expr].Value.Int(), nil
+		default:
+			return 0, fmt.Errorf("unsupported global type: %T", expr)
+		}
 	}
 
 	for _, data := range module.DataSection() {
 		memory := memories[data.MemoryIndex]
-		if int(data.Offset)+len(data.Init) > len(memory.Data) {
+		offset, err := eval(data.Offset)
+		if err != nil {
+			return nil, fmt.Errorf("failed to evaluate offset: %w", err)
+		}
+		if offset+len(data.Init) > len(memory.Data) {
 			return nil, fmt.Errorf("data segment does not fit in memory")
 		}
-		copy(memory.Data[data.Offset:], data.Init)
+		copy(memory.Data[offset:], data.Init)
 	}
 
 	return &Store{

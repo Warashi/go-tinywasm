@@ -85,7 +85,7 @@ func (r *Runtime) GlobalSet(index int, value runtime.Value) error {
 	if index < 0 || len(r.store.globals) <= index {
 		return fmt.Errorf("invalid global index: %d", index)
 	}
-	if !r.store.globals[index].Mut {
+	if !r.store.globals[index].Mutable {
 		return fmt.Errorf("global is immutable")
 	}
 	r.store.globals[index].Value = value

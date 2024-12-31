@@ -46,23 +46,33 @@ func ValueFrom(v any) (Value, error) {
 
 type Value interface {
 	Type() ValueType
+	Int() int
+	Bool() bool
 }
 
 type ValueI32 int32
 
 func (ValueI32) Type() ValueType { return ValueTypeI32 }
+func (v ValueI32) Int() int      { return int(v) }
+func (v ValueI32) Bool() bool    { return v != 0 }
 
 type ValueI64 int64
 
 func (ValueI64) Type() ValueType { return ValueTypeI64 }
+func (v ValueI64) Int() int      { return int(v) }
+func (v ValueI64) Bool() bool    { return v != 0 }
 
 type ValueF32 float32
 
 func (ValueF32) Type() ValueType { return ValueTypeF32 }
+func (v ValueF32) Int() int      { return int(v) }
+func (v ValueF32) Bool() bool    { return v != 0 }
 
 type ValueF64 float64
 
 func (ValueF64) Type() ValueType { return ValueTypeF64 }
+func (v ValueF64) Int() int      { return int(v) }
+func (v ValueF64) Bool() bool    { return v != 0 }
 
 func Falsy(v Value) bool {
 	switch v := v.(type) {

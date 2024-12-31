@@ -62,6 +62,6 @@ func (m *MemoryInst) ReadAt(p []byte, off int64) (n int, err error) {
 }
 
 type GlobalInst struct {
-	Value Value
-	Mut   bool
+	Value   Value
+	Mutable bool
 }
