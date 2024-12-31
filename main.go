@@ -1,19 +1,26 @@
 package main
 
 import (
-	"bytes"
 	_ "embed"
+
+	"flag"
 	"log"
+	"os"
 
 	"github.com/Warashi/wasmium/runtime"
 	"github.com/Warashi/wasmium/wasip1"
 )
 
-//go:embed testdata/hello_world.wasm
-var helloWorld []byte
-
 func main() {
-	r, err := runtime.New(bytes.NewReader(helloWorld))
+	flag.Parse()
+
+	f, err := os.Open(flag.Arg(0))
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer f.Close()
+
+	r, err := runtime.New(f)
 	if err != nil {
 		log.Fatalln(err)
 	}
