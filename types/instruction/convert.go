@@ -14,7 +14,7 @@ func Convert(insts []binary.Instruction) ([]runtime.Instruction, error) {
 	for _, inst := range insts {
 		o, ok := inst.(runtime.Instruction)
 		if !ok {
-			return nil, ErrInvalidInstruction
+			return nil, fmt.Errorf("%w: %T", ErrInvalidInstruction, inst)
 		}
 		result = append(result, o)
 	}
