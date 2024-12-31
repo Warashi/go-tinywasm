@@ -27,4 +27,6 @@ type Runtime interface {
 	Func(i int) (FuncInst, error)
 	InvokeInternal(InternalFuncInst) ([]Value, error)
 	InvokeExternal(ExternalFuncInst) ([]Value, error)
+
+	WriteMemoryAt(n int, data []byte, offset int64) (int, error)
 }

@@ -1,9 +1,11 @@
 package instruction
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/Warashi/go-tinywasm/opcode"
+	"github.com/Warashi/go-tinywasm/types/runtime"
 )
 
 type I32LtS struct{}
@@ -13,6 +15,36 @@ func (i *I32LtS) Opcode() opcode.Opcode {
 }
 
 func (i *I32LtS) ReadOperandsFrom(r io.Reader) error {
+	return nil
+}
+
+func (i *I32LtS) Execute(r runtime.Runtime, f runtime.Frame) error {
+	right, err := r.PopStack()
+	if err != nil {
+		return fmt.Errorf("failed to pop stack: %w", err)
+	}
+
+	left, err := r.PopStack()
+	if err != nil {
+		return fmt.Errorf("failed to pop stack: %w", err)
+	}
+
+	v1, ok := left.(runtime.ValueI32)
+	if !ok {
+		return runtime.ErrInvalidValue
+	}
+
+	v2, ok := right.(runtime.ValueI32)
+	if !ok {
+		return runtime.ErrInvalidValue
+	}
+
+	if v1 < v2 {
+		r.PushStack(runtime.ValueI32(1))
+	} else {
+		r.PushStack(runtime.ValueI32(0))
+	}
+
 	return nil
 }
 

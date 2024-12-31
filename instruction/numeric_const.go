@@ -3,8 +3,9 @@ package instruction
 import (
 	"io"
 
-	"github.com/Warashi/go-tinywasm/opcode"
 	"github.com/Warashi/go-tinywasm/leb128"
+	"github.com/Warashi/go-tinywasm/opcode"
+	"github.com/Warashi/go-tinywasm/types/runtime"
 )
 
 type I32Const struct {
@@ -25,6 +26,11 @@ func (i *I32Const) ReadOperandsFrom(r io.Reader) error {
 	return err
 }
 
+func (i *I32Const) Execute(r runtime.Runtime, f runtime.Frame) error {
+	r.PushStack(runtime.ValueI32(i.value))
+	return nil
+}
+
 type I64Const struct {
 	value int64
 }
@@ -43,38 +49,53 @@ func (i *I64Const) ReadOperandsFrom(r io.Reader) error {
 	return err
 }
 
+func (i *I64Const) Execute(r runtime.Runtime, f runtime.Frame) error {
+	r.PushStack(runtime.ValueI64(i.value))
+	return nil
+}
+
 type F32Const struct {
 	value float32
 }
 
-func (f *F32Const) Value() float32 {
-	return f.value
+func (i *F32Const) Value() float32 {
+	return i.value
 }
 
-func (f *F32Const) Opcode() opcode.Opcode {
+func (i *F32Const) Opcode() opcode.Opcode {
 	return opcode.OpcodeF32Const
 }
 
-func (f *F32Const) ReadOperandsFrom(r io.Reader) error {
+func (i *F32Const) ReadOperandsFrom(r io.Reader) error {
 	var err error
-	f.value, err = readF32(r)
+	i.value, err = readF32(r)
 	return err
+}
+
+func (i *F32Const) Execute(r runtime.Runtime, f runtime.Frame) error {
+	r.PushStack(runtime.ValueF32(i.value))
+	return nil
 }
 
 type F64Const struct {
 	value float64
 }
 
-func (f *F64Const) Value() float64 {
-	return f.value
+func (i *F64Const) Value() float64 {
+	return i.value
 }
 
-func (f *F64Const) Opcode() opcode.Opcode {
+func (i *F64Const) Opcode() opcode.Opcode {
 	return opcode.OpcodeF64Const
 }
 
-func (f *F64Const) ReadOperandsFrom(r io.Reader) error {
+func (i *F64Const) ReadOperandsFrom(r io.Reader) error {
 	var err error
-	f.value, err = readF64(r)
+	i.value, err = readF64(r)
 	return err
+}
+
+func (i *F64Const) Execute(r runtime.Runtime, f runtime.Frame) error {
+	r.PushStack(runtime.ValueF64(i.value))
+	return nil
 }

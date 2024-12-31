@@ -14,6 +14,14 @@ type Runtime struct {
 	imports   Import
 }
 
+func (r *Runtime) WriteMemoryAt(n int, data []byte, offset int64) (int, error) {
+	if n < 0 || len(r.store.memories) <= n {
+		return 0, fmt.Errorf("invalid memory index: %d", n)
+	}
+
+	return r.store.memories[n].WriteAt(data, offset)
+}
+
 // Func implements types.Runtime.
 func (r *Runtime) Func(i int) (runtime.FuncInst, error) {
 	if i < 0 || len(r.store.funcs) <= i {

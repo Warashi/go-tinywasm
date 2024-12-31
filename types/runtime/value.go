@@ -56,6 +56,14 @@ type ValueI64 int64
 
 func (ValueI64) Type() ValueType { return ValueTypeI64 }
 
+type ValueF32 float32
+
+func (ValueF32) Type() ValueType { return ValueTypeF32 }
+
+type ValueF64 float64
+
+func (ValueF64) Type() ValueType { return ValueTypeF64 }
+
 func Falsy(v Value) bool {
 	switch v := v.(type) {
 	case ValueI32:

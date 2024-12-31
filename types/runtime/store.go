@@ -2,7 +2,6 @@ package runtime
 
 import "github.com/Warashi/go-tinywasm/types/binary"
 
-
 type FuncInst interface {
 	isFuncInst()
 }
@@ -44,4 +43,11 @@ func (m ModuleInst) Exported(name string) (ExportInst, bool) {
 type MemoryInst struct {
 	Data []byte
 	Max  uint32
+}
+
+func (m *MemoryInst) WriteAt(p []byte, off int64) (n int, err error) {
+	if int64(len(m.Data)) < off+int64(len(p)) {
+		return 0, ErrMemoryOutOfBounds
+	}
+	return copy(m.Data[off:], p), nil
 }
