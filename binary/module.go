@@ -22,6 +22,7 @@ type Module struct {
 	importSection   []binary.Import
 	tableSection    []binary.TableType
 	globalSection   []binary.GlobalType
+	startSection    *uint32
 }
 
 func NewModule(r io.Reader) (*Module, error) {
@@ -102,7 +103,10 @@ func decode(r io.Reader) (*Module, error) {
 				return nil, fmt.Errorf("failed to decode export section: %w", err)
 			}
 		case SectionCodeStart:
-			// TODO
+			module.startSection, err = decodeStartSection(sectionContents)
+			if err != nil {
+				return nil, fmt.Errorf("failed to decode start section: %w", err)
+			}
 		case SectionCodeElement:
 			// TODO
 		case SectionCodeCode:
@@ -546,4 +550,12 @@ func decodeGlobalSection(r io.Reader) ([]binary.GlobalType, error) {
 	}
 
 	return globals, nil
+}
+
+func decodeStartSection(r io.Reader) (*uint32, error) {
+	idx, err := leb128.Uint32(r)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read start index: %w", err)
+	}
+	return &idx, nil
 }
