@@ -74,17 +74,6 @@ func (ValueF64) Type() ValueType { return ValueTypeF64 }
 func (v ValueF64) Int() int      { return int(v) }
 func (v ValueF64) Bool() bool    { return v != 0 }
 
-func Falsy(v Value) bool {
-	switch v := v.(type) {
-	case ValueI32:
-		return v == 0
-	case ValueI64:
-		return v == 0
-	default:
-		return false
-	}
-}
-
 type LabelKind int
 
 const (

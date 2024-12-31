@@ -95,7 +95,7 @@ func (i *If) Execute(r runtime.Runtime, f *runtime.Frame) error {
 		return fmt.Errorf("failed to get end address: %w", err)
 	}
 
-	if runtime.Falsy(cond) {
+	if !cond.Bool() {
 		f.ProgramCounter = nextProgramCounter
 	}
 
