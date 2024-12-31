@@ -1,37 +1,38 @@
 package binary
 
 import (
-	"encoding/binary"
 	"errors"
 	"fmt"
 	"io"
 
 	"github.com/Warashi/go-tinywasm/leb128"
+	"github.com/Warashi/go-tinywasm/opcode"
+	"github.com/Warashi/go-tinywasm/types/binary"
 )
 
 type Module struct {
 	magic           string
 	version         uint32
-	memorySection   []Memory
-	dataSection     []Data
-	typeSection     []FuncType
+	memorySection   []binary.Memory
+	dataSection     []binary.Data
+	typeSection     []binary.FuncType
 	functionSection []uint32
-	codeSection     []Function
-	exportSection   []Export
-	importSection   []Import
+	codeSection     []binary.Function
+	exportSection   []binary.Export
+	importSection   []binary.Import
 }
 
 func NewModule(r io.Reader) (*Module, error) {
 	return decode(r)
 }
 
-func (m *Module) MemorySection() []Memory   { return m.memorySection }
-func (m *Module) DataSection() []Data       { return m.dataSection }
-func (m *Module) TypeSection() []FuncType   { return m.typeSection }
-func (m *Module) FunctionSection() []uint32 { return m.functionSection }
-func (m *Module) CodeSection() []Function   { return m.codeSection }
-func (m *Module) ExportSection() []Export   { return m.exportSection }
-func (m *Module) ImportSection() []Import   { return m.importSection }
+func (m *Module) MemorySection() []binary.Memory { return m.memorySection }
+func (m *Module) DataSection() []binary.Data     { return m.dataSection }
+func (m *Module) TypeSection() []binary.FuncType { return m.typeSection }
+func (m *Module) FunctionSection() []uint32      { return m.functionSection }
+func (m *Module) CodeSection() []binary.Function { return m.codeSection }
+func (m *Module) ExportSection() []binary.Export { return m.exportSection }
+func (m *Module) ImportSection() []binary.Import { return m.importSection }
 
 func decode(r io.Reader) (*Module, error) {
 	var (
@@ -129,7 +130,7 @@ func decodePreamble(r io.Reader) (string, uint32, error) {
 		return "", 0, fmt.Errorf("failed to read version: %w", err)
 	}
 
-	return string(magic[:]), binary.LittleEndian.Uint32(version[:]), nil
+	return string(magic[:]), endian.Uint32(version[:]), nil
 }
 
 func decodeSectionHeader(r io.Reader) (SectionCode, uint32, error) {
@@ -146,13 +147,13 @@ func decodeSectionHeader(r io.Reader) (SectionCode, uint32, error) {
 	return SectionCode(code), size, nil
 }
 
-func decodeTypeSection(r io.Reader) ([]FuncType, error) {
+func decodeTypeSection(r io.Reader) ([]binary.FuncType, error) {
 	count, err := leb128.Uint32(r)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read type section count: %w", err)
 	}
 
-	funcTypes := make([]FuncType, 0, count)
+	funcTypes := make([]binary.FuncType, 0, count)
 	for range count {
 		f, err := readByte(r)
 		if err != nil {
@@ -167,7 +168,7 @@ func decodeTypeSection(r io.Reader) ([]FuncType, error) {
 			return nil, fmt.Errorf("failed to read parameter count: %w", err)
 		}
 
-		params := make([]ValueType, 0, paramCount)
+		params := make([]binary.ValueType, 0, paramCount)
 		for range paramCount {
 			v, err := decodeValueType(r)
 			if err != nil {
@@ -181,7 +182,7 @@ func decodeTypeSection(r io.Reader) ([]FuncType, error) {
 			return nil, fmt.Errorf("failed to read result count: %w", err)
 		}
 
-		results := make([]ValueType, 0, resultCount)
+		results := make([]binary.ValueType, 0, resultCount)
 		for range resultCount {
 			v, err := decodeValueType(r)
 			if err != nil {
@@ -190,7 +191,7 @@ func decodeTypeSection(r io.Reader) ([]FuncType, error) {
 			results = append(results, v)
 		}
 
-		funcTypes = append(funcTypes, FuncType{params: params, results: results})
+		funcTypes = append(funcTypes, binary.FuncType{Params: params, Results: results})
 	}
 
 	return funcTypes, nil
@@ -215,13 +216,13 @@ func decodeFunctionSection(r io.Reader) ([]uint32, error) {
 	return idxs, nil
 }
 
-func decodeCodeSection(r io.Reader) ([]Function, error) {
+func decodeCodeSection(r io.Reader) ([]binary.Function, error) {
 	count, err := leb128.Uint32(r)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read function count: %w", err)
 	}
 
-	functions := make([]Function, 0, count)
+	functions := make([]binary.Function, 0, count)
 	for range count {
 		size, err := leb128.Uint32(r)
 		if err != nil {
@@ -242,47 +243,47 @@ func decodeCodeSection(r io.Reader) ([]Function, error) {
 	return functions, nil
 }
 
-func decodeValueType(r io.Reader) (ValueType, error) {
+func decodeValueType(r io.Reader) (binary.ValueType, error) {
 	b, err := readByte(r)
 	if err != nil {
 		return 0, fmt.Errorf("failed to read value type: %w", err)
 	}
-	return ValueType(b), nil
+	return binary.ValueType(b), nil
 }
 
-func decodeFunctionBody(r io.Reader) (Function, error) {
+func decodeFunctionBody(r io.Reader) (binary.Function, error) {
 	count, err := leb128.Uint32(r)
 	if err != nil {
-		return Function{}, fmt.Errorf("failed to read local count: %w", err)
+		return binary.Function{}, fmt.Errorf("failed to read local count: %w", err)
 	}
 
-	locals := make([]FunctionLocal, 0, count)
+	locals := make([]binary.FunctionLocal, 0, count)
 	for range count {
 		typeCount, err := leb128.Uint32(r)
 		if err != nil {
-			return Function{}, fmt.Errorf("failed to read type count: %w", err)
+			return binary.Function{}, fmt.Errorf("failed to read type count: %w", err)
 		}
 		valueType, err := decodeValueType(r)
 		if err != nil {
-			return Function{}, fmt.Errorf("failed to decode value type: %w", err)
+			return binary.Function{}, fmt.Errorf("failed to decode value type: %w", err)
 		}
-		locals = append(locals, FunctionLocal{typeCount: typeCount, valueType: valueType})
+		locals = append(locals, binary.FunctionLocal{TypeCount: typeCount, ValueType: valueType})
 	}
 
 	instructions, err := decodeInstructions(r)
 	if err != nil {
-		return Function{}, fmt.Errorf("failed to decode instructions: %w", err)
+		return binary.Function{}, fmt.Errorf("failed to decode instructions: %w", err)
 	}
 
-	return Function{locals: locals, code: instructions}, nil
+	return binary.Function{Locals: locals, Code: instructions}, nil
 }
 
-func decodeInstructions(r io.Reader) ([]Instruction, error) {
+func decodeInstructions(r io.Reader) ([]binary.Instruction, error) {
 	var (
-		instructions []Instruction
+		instructions []binary.Instruction
 	)
 	for {
-		opcode, err := readByte(r)
+		b, err := readByte(r)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				break
@@ -290,7 +291,7 @@ func decodeInstructions(r io.Reader) ([]Instruction, error) {
 			return nil, fmt.Errorf("failed to read opcode: %w", err)
 		}
 
-		instruction, err := FromOpcode(Opcode(opcode))
+		instruction, err := fromOpcode(opcode.Opcode(b))
 		if err != nil {
 			return nil, fmt.Errorf("failed to create instruction: %w", err)
 		}
@@ -303,13 +304,13 @@ func decodeInstructions(r io.Reader) ([]Instruction, error) {
 	return instructions, nil
 }
 
-func decodeExportSection(r io.Reader) ([]Export, error) {
+func decodeExportSection(r io.Reader) ([]binary.Export, error) {
 	count, err := leb128.Uint32(r)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read export count: %w", err)
 	}
 
-	exports := make([]Export, 0, count)
+	exports := make([]binary.Export, 0, count)
 
 	for range count {
 		name, err := decodeName(r)
@@ -327,7 +328,7 @@ func decodeExportSection(r io.Reader) ([]Export, error) {
 
 		switch kind {
 		case 0x00:
-			exports = append(exports, Export{name: name, desc: ExportDescFunc{index: index}})
+			exports = append(exports, binary.Export{Name: name, Desc: binary.ExportDescFunc{Index: index}})
 		default:
 			return nil, fmt.Errorf("unsupported export kind: %2x", kind)
 		}
@@ -336,13 +337,13 @@ func decodeExportSection(r io.Reader) ([]Export, error) {
 	return exports, nil
 }
 
-func decodeImportSection(r io.Reader) ([]Import, error) {
+func decodeImportSection(r io.Reader) ([]binary.Import, error) {
 	count, err := leb128.Uint32(r)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read import count: %w", err)
 	}
 
-	imports := make([]Import, 0, count)
+	imports := make([]binary.Import, 0, count)
 
 	for range count {
 		module, err := decodeName(r)
@@ -363,7 +364,7 @@ func decodeImportSection(r io.Reader) ([]Import, error) {
 			if err != nil {
 				return nil, fmt.Errorf("failed to read import index: %w", err)
 			}
-			imports = append(imports, Import{module: module, field: name, desc: ImportDescFunc{index: index}})
+			imports = append(imports, binary.Import{Module: module, Field: name, Desc: binary.ImportDescFunc{Index: index}})
 		default:
 			return nil, fmt.Errorf("unsupported import kind: %x", kind)
 		}
@@ -372,17 +373,17 @@ func decodeImportSection(r io.Reader) ([]Import, error) {
 	return imports, nil
 }
 
-func decodeMemorySection(r io.Reader) ([]Memory, error) {
+func decodeMemorySection(r io.Reader) ([]binary.Memory, error) {
 	count, err := leb128.Uint32(r)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read memory count: %w", err)
 	}
 
-	memories := make([]Memory, 0, count)
+	memories := make([]binary.Memory, 0, count)
 
 	for range count {
-		m := Memory{}
-		m.limits, err = decodeLimits(r)
+		m := binary.Memory{}
+		m.Limits, err = decodeLimits(r)
 		if err != nil {
 			return nil, fmt.Errorf("failed to decode memory limits: %w", err)
 		}
@@ -392,27 +393,27 @@ func decodeMemorySection(r io.Reader) ([]Memory, error) {
 	return memories, nil
 }
 
-func decodeLimits(r io.Reader) (Limits, error) {
+func decodeLimits(r io.Reader) (binary.Limits, error) {
 	hasMax, err := leb128.Uint32(r)
 	if err != nil {
-		return Limits{}, fmt.Errorf("failed to read hasMax: %w", err)
+		return binary.Limits{}, fmt.Errorf("failed to read hasMax: %w", err)
 	}
 
 	min, err := leb128.Uint32(r)
 	if err != nil {
-		return Limits{}, fmt.Errorf("failed to read min: %w", err)
+		return binary.Limits{}, fmt.Errorf("failed to read min: %w", err)
 	}
 
 	if hasMax == 0 {
-		return Limits{min: min, max: 0}, nil
+		return binary.Limits{Min: min, Max: 0}, nil
 	}
 
 	max, err := leb128.Uint32(r)
 	if err != nil {
-		return Limits{}, fmt.Errorf("failed to read max: %w", err)
+		return binary.Limits{}, fmt.Errorf("failed to read max: %w", err)
 	}
 
-	return Limits{min: min, max: max}, nil
+	return binary.Limits{Min: min, Max: max}, nil
 }
 
 func decodeName(r io.Reader) (string, error) {
@@ -445,13 +446,13 @@ func decodeExpr(r io.Reader) (uint32, error) {
 	return offset, nil
 }
 
-func decodeDataSection(r io.Reader) ([]Data, error) {
+func decodeDataSection(r io.Reader) ([]binary.Data, error) {
 	count, err := leb128.Uint32(r)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read data count: %w", err)
 	}
 
-	data := make([]Data, 0, count)
+	data := make([]binary.Data, 0, count)
 
 	for range count {
 		memoryIndex, err := leb128.Uint32(r)
@@ -474,22 +475,22 @@ func decodeDataSection(r io.Reader) ([]Data, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to read data: %w", err)
 		}
-		data = append(data, Data{memoryIndex: memoryIndex, offset: offset, init: init})
+		data = append(data, binary.Data{MemoryIndex: memoryIndex, Offset: offset, Init: init})
 	}
 
 	return data, nil
 }
 
-func decodeBlock(r io.Reader) (Block, error) {
+func decodeBlock(r io.Reader) (binary.Block, error) {
 	b, err := readByte(r)
 	if err != nil {
-		return Block{}, fmt.Errorf("failed to read block type: %w", err)
+		return binary.Block{}, fmt.Errorf("failed to read block type: %w", err)
 	}
 
 	switch b {
 	case 0x40:
-		return Block{blockType: BlockTypeVoid{}}, nil
+		return binary.Block{BlockType: binary.BlockTypeVoid{}}, nil
 	default:
-		return Block{blockType: BlockTypeValue{valueTypes: []ValueType{ValueType(b)}}}, nil
+		return binary.Block{BlockType: binary.BlockTypeValue{ValueTypes: []binary.ValueType{binary.ValueType(b)}}}, nil
 	}
 }

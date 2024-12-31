@@ -1,4 +1,4 @@
-package interfaces
+package runtime
 
 import (
 	"fmt"
@@ -10,10 +10,6 @@ var (
 	ErrEmptyStack      = fmt.Errorf("stack is empty")
 	ErrIndexOufOfRange = fmt.Errorf("index out of range")
 )
-
-type Instruction interface {
-	Execute(Runtime, *Frame) error
-}
 
 type Runtime interface {
 	PopStack() (Value, error)
@@ -31,13 +27,4 @@ type Runtime interface {
 	Func(i int) (FuncInst, error)
 	InvokeInternal(InternalFuncInst) ([]Value, error)
 	InvokeExternal(ExternalFuncInst) ([]Value, error)
-}
-
-type Frame struct {
-	ProgramCounter int
-	StackPointer   int
-	Instructions   []Instruction
-	Arity          int
-	Labels         stack.Stack[Label]
-	Locals         []Value
 }

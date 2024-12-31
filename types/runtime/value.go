@@ -1,4 +1,4 @@
-package execution
+package runtime
 
 import (
 	"encoding/binary"
@@ -56,52 +56,15 @@ type ValueI64 int64
 
 func (ValueI64) Type() ValueType { return ValueTypeI64 }
 
-func Add(a, b Value) (Value, error) {
-	if a.Type() != b.Type() {
-		return nil, fmt.Errorf("type mismatch: %v + %v", a.Type(), b.Type())
-	}
-	switch a := a.(type) {
+func Falsy(v Value) bool {
+	switch v := v.(type) {
 	case ValueI32:
-		return ValueI32(a + b.(ValueI32)), nil
+		return v == 0
 	case ValueI64:
-		return ValueI64(a + b.(ValueI64)), nil
+		return v == 0
+	default:
+		return false
 	}
-
-	return nil, fmt.Errorf("unsupported type %T", a)
-}
-
-func Sub(a, b Value) (Value, error) {
-	if a.Type() != b.Type() {
-		return nil, fmt.Errorf("type mismatch: %v - %v", a.Type(), b.Type())
-	}
-	switch a := a.(type) {
-	case ValueI32:
-		return ValueI32(a - b.(ValueI32)), nil
-	case ValueI64:
-		return ValueI64(a - b.(ValueI64)), nil
-	}
-
-	return nil, fmt.Errorf("unsupported type %T", a)
-}
-
-func LessThan(a, b Value) (Value, error) {
-	if a.Type() != b.Type() {
-		return nil, fmt.Errorf("type mismatch: %v < %v", a.Type(), b.Type())
-	}
-	switch a := a.(type) {
-	case ValueI32:
-		if a < b.(ValueI32) {
-			return ValueI32(1), nil
-		}
-		return ValueI32(0), nil
-	case ValueI64:
-		if a < b.(ValueI64) {
-			return ValueI32(1), nil
-		}
-		return ValueI32(0), nil
-	}
-
-	return nil, fmt.Errorf("unsupported type %T", a)
 }
 
 type LabelKind int
@@ -117,6 +80,31 @@ type Label struct {
 	programCounter int
 	stackPointer   int
 	arity          int
+}
+
+func NewLabel(kind LabelKind, pc, sp, arity int) Label {
+	return Label{
+		kind:           kind,
+		programCounter: pc,
+		stackPointer:   sp,
+		arity:          arity,
+	}
+}
+
+func (l Label) Kind() LabelKind {
+	return l.kind
+}
+
+func (l Label) ProgramCounter() int {
+	return l.programCounter
+}
+
+func (l Label) StackPointer() int {
+	return l.stackPointer
+}
+
+func (l Label) Arity() int {
+	return l.arity
 }
 
 func writeValue(buf []byte, v Value) (int, error) {

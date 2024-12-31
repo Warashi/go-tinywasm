@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/Warashi/go-tinywasm/binary"
-	"github.com/Warashi/go-tinywasm/interfaces"
 	"github.com/Warashi/go-tinywasm/leb128"
 	"github.com/Warashi/go-tinywasm/opcode"
+	"github.com/Warashi/go-tinywasm/types/binary"
+	"github.com/Warashi/go-tinywasm/types/runtime"
 )
 
 type If struct {
@@ -20,7 +20,7 @@ func (i *If) ReadOperandsFrom(r io.Reader) error {
 	return i.block.decode(r)
 }
 func (i *If) Block() Block { return i.block }
-func (i *If) Execute(r interfaces.Runtime, f *interfaces.Frame) error {
+func (i *If) Execute(r runtime.Runtime, f *runtime.Frame) error {
 	cond, err := r.PopStack()
 	if err != nil {
 		return fmt.Errorf("failed to pop stack: %w", err)
@@ -31,16 +31,16 @@ func (i *If) Execute(r interfaces.Runtime, f *interfaces.Frame) error {
 		return fmt.Errorf("failed to get end address: %w", err)
 	}
 
-	if interfaces.Falsy(cond) {
+	if runtime.Falsy(cond) {
 		f.ProgramCounter = nextProgramCounter
 	}
 
-	f.Labels.Push(interfaces.NewLabel(interfaces.LabelKindIf, nextProgramCounter, r.StackLen(), i.Block().BlockType().ResultCount()))
+	f.Labels.Push(runtime.NewLabel(runtime.LabelKindIf, nextProgramCounter, r.StackLen(), i.Block().BlockType().ResultCount()))
 
 	return nil
 }
 
-func (*If) getEndAddress(insts []interfaces.Instruction, programCounter int) (int, error) {
+func (*If) getEndAddress(insts []runtime.Instruction, programCounter int) (int, error) {
 	depth := 0
 	for {
 		programCounter++
@@ -68,10 +68,10 @@ func (*End) Opcode() opcode.Opcode { return opcode.OpcodeEnd }
 
 func (*End) ReadOperandsFrom(io.Reader) error { return nil }
 
-func (*End) Execute(r interfaces.Runtime, f *interfaces.Frame) error {
+func (*End) Execute(r runtime.Runtime, f *runtime.Frame) error {
 	label, err := r.PopLabel()
 	if err != nil {
-		if !errors.Is(err, interfaces.ErrEmptyStack) {
+		if !errors.Is(err, runtime.ErrEmptyStack) {
 			return fmt.Errorf("failed to pop label: %w", err)
 		}
 		// If the label stack is empty, it means the end of the function.
@@ -97,7 +97,7 @@ func (*Return) Opcode() opcode.Opcode { return opcode.OpcodeReturn }
 
 func (*Return) ReadOperandsFrom(io.Reader) error { return nil }
 
-func (*Return) Execute(r interfaces.Runtime, f interfaces.Frame) error {
+func (*Return) Execute(r runtime.Runtime, f runtime.Frame) error {
 	frame, err := r.PopCallStack()
 	if err != nil {
 		return fmt.Errorf("failed to pop call stack: %w", err)
@@ -123,15 +123,15 @@ func (c *Call) ReadOperandsFrom(r io.Reader) error {
 
 func (c *Call) Index() uint32 { return c.index }
 
-func (c *Call) Execute(r interfaces.Runtime, f interfaces.Frame) error {
+func (c *Call) Execute(r runtime.Runtime, f runtime.Frame) error {
 	funcInst, err := r.Func(int(c.index))
 	if err != nil {
 		return fmt.Errorf("failed to get function: %w", err)
 	}
 	switch f := funcInst.(type) {
-	case interfaces.InternalFuncInst:
+	case runtime.InternalFuncInst:
 		return c.pushFrame(r, f)
-	case interfaces.ExternalFuncInst:
+	case runtime.ExternalFuncInst:
 		v, err := r.InvokeExternal(f)
 		if err != nil {
 			return fmt.Errorf("failed to invoke external function: %w", err)
@@ -143,28 +143,28 @@ func (c *Call) Execute(r interfaces.Runtime, f interfaces.Frame) error {
 	return nil
 }
 
-func (*Call) pushFrame(r interfaces.Runtime, f interfaces.InternalFuncInst) error {
-	bottom := r.StackLen() - len(f.FuncType().Params())
+func (*Call) pushFrame(r runtime.Runtime, f runtime.InternalFuncInst) error {
+	bottom := r.StackLen() - len(f.FuncType.Params)
 	locals, err := r.SplitOffStack(bottom)
 	if err != nil {
 		return fmt.Errorf("failed to split off stack: %w", err)
 	}
 
-	for _, local := range f.Code().Locals() {
+	for _, local := range f.Code.Locals {
 		switch local {
 		case binary.ValueTypeI32:
-			locals.Push(interfaces.ValueI32(0))
+			locals.Push(runtime.ValueI32(0))
 		case binary.ValueTypeI64:
-			locals.Push(interfaces.ValueI64(0))
+			locals.Push(runtime.ValueI64(0))
 		}
 	}
 
-	arity := len(f.FuncType().Results())
+	arity := len(f.FuncType.Results)
 
-	frame := interfaces.Frame{
+	frame := runtime.Frame{
 		ProgramCounter: -1,
 		StackPointer:   r.StackLen(),
-		Instructions:   f.Code().Body(),
+		Instructions:   f.Code.Body,
 		Arity:          arity,
 		Locals:         locals,
 	}

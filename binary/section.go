@@ -16,16 +16,3 @@ const (
 	SectionCodeCode
 	SectionCodeData
 )
-
-type Function struct {
-	locals []FunctionLocal
-	code   []Instruction
-}
-
-func (f Function) Locals() []FunctionLocal {
-	return f.locals
-}
-
-func (f Function) Code() []Instruction {
-	return f.code
-}
