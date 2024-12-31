@@ -15,6 +15,9 @@ type Runtime interface {
 	PopStack() (Value, error)
 	PopCallStack() (*Frame, error)
 
+	GlobalGet(index int) (Value, error)
+	GlobalSet(index int, value Value) error
+
 	PushStack(Value)
 	PushCallStack(*Frame)
 

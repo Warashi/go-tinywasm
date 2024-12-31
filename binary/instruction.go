@@ -27,6 +27,10 @@ func fromOpcode(op opcode.Opcode) (inst, error) {
 		return new(instruction.LocalGet), nil
 	case opcode.OpcodeLocalSet:
 		return new(instruction.LocalSet), nil
+	case opcode.OpcodeGlobalGet:
+		return new(instruction.GlobalGet), nil
+	case opcode.OpcodeGlobalSet:
+		return new(instruction.GlobalSet), nil
 	case opcode.OpcodeI32Store:
 		return new(instruction.I32Store), nil
 	case opcode.OpcodeI32Const:

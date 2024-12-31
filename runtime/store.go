@@ -16,6 +16,7 @@ type Store struct {
 	funcs    []runtime.FuncInst
 	module   runtime.ModuleInst
 	memories []runtime.MemoryInst
+	globals  []runtime.GlobalInst
 }
 
 func NewStore(module *binary.Module) (*Store, error) {

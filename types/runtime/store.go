@@ -60,3 +60,8 @@ func (m *MemoryInst) ReadAt(p []byte, off int64) (n int, err error) {
 	}
 	return copy(p, m.Data[off:]), nil
 }
+
+type GlobalInst struct {
+	Value Value
+	Mut   bool
+}

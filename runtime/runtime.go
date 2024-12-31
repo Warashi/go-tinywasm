@@ -74,6 +74,24 @@ func (r *Runtime) AddImport(module string, name string, fn ImportFunc) {
 	r.imports[module][name] = fn
 }
 
+func (r *Runtime) GlobalGet(index int) (runtime.Value, error) {
+	if index < 0 || len(r.store.globals) <= index {
+		return nil, fmt.Errorf("invalid global index: %d", index)
+	}
+	return r.store.globals[index].Value, nil
+}
+
+func (r *Runtime) GlobalSet(index int, value runtime.Value) error {
+	if index < 0 || len(r.store.globals) <= index {
+		return fmt.Errorf("invalid global index: %d", index)
+	}
+	if !r.store.globals[index].Mut {
+		return fmt.Errorf("global is immutable")
+	}
+	r.store.globals[index].Value = value
+	return nil
+}
+
 func (r *Runtime) WriteMemoryAt(n int, data []byte, offset int64) (int, error) {
 	if n < 0 || len(r.store.memories) <= n {
 		return 0, fmt.Errorf("invalid memory index: %d", n)
