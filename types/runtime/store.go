@@ -51,3 +51,10 @@ func (m *MemoryInst) WriteAt(p []byte, off int64) (n int, err error) {
 	}
 	return copy(m.Data[off:], p), nil
 }
+
+func (m *MemoryInst) ReadAt(p []byte, off int64) (n int, err error) {
+	if int64(len(m.Data)) < off+int64(len(p)) {
+		return 0, ErrMemoryOutOfBounds
+	}
+	return copy(p, m.Data[off:]), nil
+}

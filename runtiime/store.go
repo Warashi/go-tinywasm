@@ -98,6 +98,21 @@ func NewStore(module *binary.Module) (*Store, error) {
 	}, nil
 }
 
+func (s *Store) Funcs() []runtime.FuncInst {
+	return s.funcs
+}
+
+func (s *Store) Module() runtime.ModuleInst {
+	return s.module
+}
+
+func (s *Store) Memory(n int) (runtime.MemoryInst, error) {
+	if n < 0 || len(s.memories) <= n {
+		return runtime.MemoryInst{}, fmt.Errorf("invalid memory index: %d", n)
+	}
+	return s.memories[n], nil
+}
+
 func zipSlice[A, B any, SA ~[]A, SB ~[]B](a SA, b SB) iter.Seq2[A, B] {
 	return func(yield func(A, B) bool) {
 		for i := range min(len(a), len(b)) {
