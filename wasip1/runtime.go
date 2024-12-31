@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	runtime "github.com/Warashi/go-tinywasm/runtiime"
+	runtime "github.com/Warashi/go-tinywasm/runtime"
 	tr "github.com/Warashi/go-tinywasm/types/runtime"
 )
 
