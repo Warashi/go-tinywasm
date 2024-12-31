@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"fmt"
 	"slices"
 )
 
@@ -48,4 +49,23 @@ type Runtime struct {
 	stack     Stack[Value]
 	callStack Stack[*Frame]
 	imports   Import
+}
+
+func (r *Runtime) execute() error {
+	for len(r.callStack) > 0 {
+		frame := r.callStack[len(r.callStack)-1]
+
+		frame.ProgramCounter++
+
+		if len(frame.Instructions) <= frame.ProgramCounter {
+			break
+		}
+
+		instruction := frame.Instructions[frame.ProgramCounter]
+		if err := instruction.Execute(r, frame); err != nil {
+			return fmt.Errorf("failed to execute instruction: %w", err)
+		}
+	}
+
+	return nil
 }
