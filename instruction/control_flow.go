@@ -1,13 +1,11 @@
 package instruction
 
 import (
-	"errors"
 	"fmt"
 	"io"
 
 	"github.com/Warashi/go-tinywasm/leb128"
 	"github.com/Warashi/go-tinywasm/opcode"
-	"github.com/Warashi/go-tinywasm/types/binary"
 	"github.com/Warashi/go-tinywasm/types/runtime"
 )
 
@@ -69,11 +67,13 @@ func (*End) Opcode() opcode.Opcode { return opcode.OpcodeEnd }
 func (*End) ReadOperandsFrom(io.Reader) error { return nil }
 
 func (*End) Execute(r runtime.Runtime, f *runtime.Frame) error {
-	label, err := r.PopLabel()
-	if err != nil {
-		if !errors.Is(err, runtime.ErrEmptyStack) {
-			return fmt.Errorf("failed to pop label: %w", err)
+	if f.Labels.Len() > 0 {
+		label := f.Labels.Pop()
+		f.ProgramCounter = label.ProgramCounter()
+		if err := r.StackUnwind(label.StackPointer(), label.Arity()); err != nil {
+			return fmt.Errorf("failed to unwind stack: %w", err)
 		}
+	} else {
 		// If the label stack is empty, it means the end of the function.
 		frame, err := r.PopCallStack()
 		if err != nil {
@@ -83,11 +83,6 @@ func (*End) Execute(r runtime.Runtime, f *runtime.Frame) error {
 			return fmt.Errorf("failed to unwind stack: %w", err)
 		}
 	}
-	f.ProgramCounter = label.ProgramCounter()
-	if err := r.StackUnwind(label.StackPointer(), label.Arity()); err != nil {
-		return fmt.Errorf("failed to unwind stack: %w", err)
-	}
-
 	return nil
 }
 
@@ -130,7 +125,7 @@ func (c *Call) Execute(r runtime.Runtime, f runtime.Frame) error {
 	}
 	switch f := funcInst.(type) {
 	case runtime.InternalFuncInst:
-		return c.pushFrame(r, f)
+		return r.PushFrame(f)
 	case runtime.ExternalFuncInst:
 		v, err := r.InvokeExternal(f)
 		if err != nil {
@@ -140,36 +135,5 @@ func (c *Call) Execute(r runtime.Runtime, f runtime.Frame) error {
 			r.PushStack(v)
 		}
 	}
-	return nil
-}
-
-func (*Call) pushFrame(r runtime.Runtime, f runtime.InternalFuncInst) error {
-	bottom := r.StackLen() - len(f.FuncType.Params)
-	locals, err := r.SplitOffStack(bottom)
-	if err != nil {
-		return fmt.Errorf("failed to split off stack: %w", err)
-	}
-
-	for _, local := range f.Code.Locals {
-		switch local {
-		case binary.ValueTypeI32:
-			locals.Push(runtime.ValueI32(0))
-		case binary.ValueTypeI64:
-			locals.Push(runtime.ValueI64(0))
-		}
-	}
-
-	arity := len(f.FuncType.Results)
-
-	frame := runtime.Frame{
-		ProgramCounter: -1,
-		StackPointer:   r.StackLen(),
-		Instructions:   f.Code.Body,
-		Arity:          arity,
-		Locals:         locals,
-	}
-
-	r.PushCallStack(&frame)
-
 	return nil
 }

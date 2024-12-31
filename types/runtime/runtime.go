@@ -13,11 +13,12 @@ var (
 
 type Runtime interface {
 	PopStack() (Value, error)
-	PopLabel() (Label, error)
 	PopCallStack() (*Frame, error)
 
 	PushStack(Value)
 	PushCallStack(*Frame)
+
+	PushFrame(InternalFuncInst) error
 
 	SplitOffStack(n int) (stack.Stack[Value], error)
 
