@@ -480,17 +480,3 @@ func decodeDataSection(r io.Reader) ([]binary.Data, error) {
 
 	return data, nil
 }
-
-func decodeBlock(r io.Reader) (binary.Block, error) {
-	b, err := readByte(r)
-	if err != nil {
-		return binary.Block{}, fmt.Errorf("failed to read block type: %w", err)
-	}
-
-	switch b {
-	case 0x40:
-		return binary.Block{BlockType: binary.BlockTypeVoid{}}, nil
-	default:
-		return binary.Block{BlockType: binary.BlockTypeValue{ValueTypes: []binary.ValueType{binary.ValueType(b)}}}, nil
-	}
-}
