@@ -42,7 +42,7 @@ func (i *I32Load) Execute(r runtime.Runtime, f *runtime.Frame) error {
 
 	a, ok := addr.(runtime.ValueI32)
 	if !ok {
-		return runtime.ErrInvalidValue
+		return fmt.Errorf("invalid value(%T): %w", addr, runtime.ErrInvalidValue)
 	}
 
 	var buf [4]byte
@@ -92,7 +92,7 @@ func (i *I32Load8U) Execute(r runtime.Runtime, f *runtime.Frame) error {
 
 	a, ok := addr.(runtime.ValueI32)
 	if !ok {
-		return runtime.ErrInvalidValue
+		return fmt.Errorf("invalid value(%T): %w", addr, runtime.ErrInvalidValue)
 	}
 
 	var buf [1]byte

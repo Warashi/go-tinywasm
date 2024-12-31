@@ -276,7 +276,7 @@ func (r *Runtime) execute() error {
 
 		instruction := frame.Instructions[frame.ProgramCounter]
 		if err := instruction.Execute(r, frame); err != nil {
-			return fmt.Errorf("failed to execute instruction: %w", err)
+			return fmt.Errorf("failed to execute instruction(%T): %w", instruction, err)
 		}
 	}
 
