@@ -2,53 +2,71 @@ package runtime
 
 import (
 	"fmt"
-	"slices"
+
+	"github.com/Warashi/go-tinywasm/interfaces"
+	"github.com/Warashi/go-tinywasm/stack"
 )
-
-type Instruction interface {
-	Execute(*Runtime, *Frame) error
-}
-
-type Frame struct {
-	ProgramCounter int
-	StackPointer   int
-	Instructions   []Instruction
-	Arity          int
-	Labels         Stack[Label]
-	Locals         []Value
-}
-
-type Stack[T any] []T
-
-func (s *Stack[T]) Push(v T) {
-	*s = append(*s, v)
-}
-
-func (s *Stack[T]) Pop() T {
-	r := (*s)[len(*s)-1]
-	*s = (*s)[:len(*s)-1]
-	return r
-}
-
-func (s *Stack[T]) Drain(n int) {
-	*s = (*s)[:n]
-}
-
-func (s *Stack[T]) SplitOff(n int) Stack[T] {
-	r := (*s)[n:]
-	*s = (*s)[:n]
-	return slices.Clone(r)
-}
-
-func (s *Stack[T]) Len() int {
-	return len(*s)
-}
 
 type Runtime struct {
 	store     *Store
-	stack     Stack[Value]
-	callStack Stack[*Frame]
+	stack     stack.Stack[Value]
+	callStack stack.Stack[*interfaces.Frame]
 	imports   Import
+}
+
+// Func implements interfaces.Runtime.
+func (r *Runtime) Func(i int) (interfaces.FuncInst, error) {
+	panic("unimplemented")
+}
+
+// InvokeExternal implements interfaces.Runtime.
+func (r *Runtime) InvokeExternal(interfaces.ExternalFuncInst) ([]interfaces.Value, error) {
+	panic("unimplemented")
+}
+
+// PopCallStack implements interfaces.Runtime.
+func (r *Runtime) PopCallStack() (*interfaces.Frame, error) {
+	panic("unimplemented")
+}
+
+// PopLabel implements interfaces.Runtime.
+func (r *Runtime) PopLabel() (interfaces.Label, error) {
+	panic("unimplemented")
+}
+
+// PopStack implements interfaces.Runtime.
+func (r *Runtime) PopStack() (interfaces.Value, error) {
+	panic("unimplemented")
+}
+
+// PushCallStack implements interfaces.Runtime.
+func (r *Runtime) PushCallStack(*interfaces.Frame) {
+	panic("unimplemented")
+}
+
+// PushStack implements interfaces.Runtime.
+func (r *Runtime) PushStack(interfaces.Value) {
+	panic("unimplemented")
+}
+
+// SplitOffStack implements interfaces.Runtime.
+func (r *Runtime) SplitOffStack(n int) (stack.Stack[interfaces.Value], error) {
+	panic("unimplemented")
+}
+
+// StackLen implements interfaces.Runtime.
+func (r *Runtime) StackLen() int {
+	panic("unimplemented")
+}
+
+// StackUnwind implements interfaces.Runtime.
+func (r *Runtime) StackUnwind(stackPointer int, arity int) error {
+	panic("unimplemented")
+}
+
+// invokeInternal implements interfaces.Runtime.
+func (r *Runtime) InvokeInternal(interfaces.InternalFuncInst) ([]interfaces.Value, error) {
+	panic("unimplemented")
 }
 
 func (r *Runtime) execute() error {
