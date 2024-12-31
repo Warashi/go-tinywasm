@@ -7,12 +7,13 @@ const (
 	SectionCodeType
 	SectionCodeImport
 	SectionCodeFunction
-	_
+	SectionCodeTable
 	SectionCodeMemory
-	_
+	SectionCodeGlobal
 	SectionCodeExport
-	_
-	_
+	SectionCodeStart
+	SectionCodeElement
 	SectionCodeCode
 	SectionCodeData
+	SectionCodeDataCount
 )
