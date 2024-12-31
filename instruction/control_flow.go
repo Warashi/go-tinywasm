@@ -6,18 +6,35 @@ import (
 
 	"github.com/Warashi/go-tinywasm/leb128"
 	"github.com/Warashi/go-tinywasm/opcode"
+	"github.com/Warashi/go-tinywasm/types/binary"
 	"github.com/Warashi/go-tinywasm/types/runtime"
 )
 
 type If struct {
-	block Block
+	Block binary.Block
+}
+
+func decodeBlock(r io.Reader) (binary.Block, error) {
+	var buf [1]byte
+
+	if _, err := io.ReadFull(r, buf[:]); err != nil {
+		return binary.Block{}, fmt.Errorf("failed to read block type: %w", err)
+	}
+
+	switch buf[0] {
+	case 0x40:
+		return binary.Block{BlockType: binary.BlockTypeVoid{}}, nil
+	default:
+		return binary.Block{BlockType: binary.BlockTypeValue{ValueTypes: []binary.ValueType{binary.ValueType(buf[0])}}}, nil
+	}
 }
 
 func (*If) Opcode() opcode.Opcode { return opcode.OpcodeIf }
 func (i *If) ReadOperandsFrom(r io.Reader) error {
-	return i.block.decode(r)
+	var err error
+	i.Block, err = decodeBlock(r)
+	return err
 }
-func (i *If) Block() Block { return i.block }
 func (i *If) Execute(r runtime.Runtime, f *runtime.Frame) error {
 	cond, err := r.PopStack()
 	if err != nil {
@@ -33,7 +50,7 @@ func (i *If) Execute(r runtime.Runtime, f *runtime.Frame) error {
 		f.ProgramCounter = nextProgramCounter
 	}
 
-	f.Labels.Push(runtime.NewLabel(runtime.LabelKindIf, nextProgramCounter, r.StackLen(), i.Block().BlockType().ResultCount()))
+	f.Labels.Push(runtime.NewLabel(runtime.LabelKindIf, nextProgramCounter, r.StackLen(), i.Block.BlockType.ResultCount()))
 
 	return nil
 }
@@ -105,21 +122,19 @@ func (*Return) Execute(r runtime.Runtime, f *runtime.Frame) error {
 }
 
 type Call struct {
-	index uint32
+	Index uint32
 }
 
 func (c *Call) Opcode() opcode.Opcode { return opcode.OpcodeCall }
 
 func (c *Call) ReadOperandsFrom(r io.Reader) error {
 	var err error
-	c.index, err = leb128.Uint32(r)
+	c.Index, err = leb128.Uint32(r)
 	return err
 }
 
-func (c *Call) Index() uint32 { return c.index }
-
 func (c *Call) Execute(r runtime.Runtime, f *runtime.Frame) error {
-	funcInst, err := r.Func(int(c.index))
+	funcInst, err := r.Func(int(c.Index))
 	if err != nil {
 		return fmt.Errorf("failed to get function: %w", err)
 	}

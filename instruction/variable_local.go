@@ -9,11 +9,7 @@ import (
 )
 
 type LocalGet struct {
-	index uint32
-}
-
-func (i *LocalGet) Index() uint32 {
-	return i.index
+	Index uint32
 }
 
 func (i *LocalGet) Opcode() opcode.Opcode {
@@ -22,26 +18,22 @@ func (i *LocalGet) Opcode() opcode.Opcode {
 
 func (i *LocalGet) ReadOperandsFrom(r io.Reader) error {
 	var err error
-	i.index, err = leb128.Uint32(r)
+	i.Index, err = leb128.Uint32(r)
 	return err
 }
 
 func (i *LocalGet) Execute(r runtime.Runtime, f *runtime.Frame) error {
-	if i.index < 0 || len(f.Locals) <= int(i.index) {
+	if i.Index < 0 || len(f.Locals) <= int(i.Index) {
 		return runtime.ErrOutOfBounds
 	}
 
-	r.PushStack(f.Locals[i.index])
+	r.PushStack(f.Locals[i.Index])
 
 	return nil
 }
 
 type LocalSet struct {
-	index uint32
-}
-
-func (i *LocalSet) Index() uint32 {
-	return i.index
+	Index uint32
 }
 
 func (i *LocalSet) Opcode() opcode.Opcode {
@@ -50,12 +42,12 @@ func (i *LocalSet) Opcode() opcode.Opcode {
 
 func (i *LocalSet) ReadOperandsFrom(r io.Reader) error {
 	var err error
-	i.index, err = leb128.Uint32(r)
+	i.Index, err = leb128.Uint32(r)
 	return err
 }
 
 func (i *LocalSet) Execute(r runtime.Runtime, f *runtime.Frame) error {
-	if i.index < 0 || len(f.Locals) <= int(i.index) {
+	if i.Index < 0 || len(f.Locals) <= int(i.Index) {
 		return runtime.ErrOutOfBounds
 	}
 
@@ -64,7 +56,7 @@ func (i *LocalSet) Execute(r runtime.Runtime, f *runtime.Frame) error {
 		return err
 	}
 
-	f.Locals[i.index] = value
+	f.Locals[i.Index] = value
 
 	return nil
 }
