@@ -20,19 +20,23 @@ type Module struct {
 	codeSection     []binary.Function
 	exportSection   []binary.Export
 	importSection   []binary.Import
+	tableSection    []binary.TableType
+	globalSection   []binary.GlobalType
 }
 
 func NewModule(r io.Reader) (*Module, error) {
 	return decode(r)
 }
 
-func (m *Module) MemorySection() []binary.Memory { return m.memorySection }
-func (m *Module) DataSection() []binary.Data     { return m.dataSection }
-func (m *Module) TypeSection() []binary.FuncType { return m.typeSection }
-func (m *Module) FunctionSection() []uint32      { return m.functionSection }
-func (m *Module) CodeSection() []binary.Function { return m.codeSection }
-func (m *Module) ExportSection() []binary.Export { return m.exportSection }
-func (m *Module) ImportSection() []binary.Import { return m.importSection }
+func (m *Module) MemorySection() []binary.Memory     { return m.memorySection }
+func (m *Module) DataSection() []binary.Data         { return m.dataSection }
+func (m *Module) TypeSection() []binary.FuncType     { return m.typeSection }
+func (m *Module) FunctionSection() []uint32          { return m.functionSection }
+func (m *Module) TableSection() []binary.TableType   { return m.tableSection }
+func (m *Module) CodeSection() []binary.Function     { return m.codeSection }
+func (m *Module) ExportSection() []binary.Export     { return m.exportSection }
+func (m *Module) ImportSection() []binary.Import     { return m.importSection }
+func (m *Module) GlobalSection() []binary.GlobalType { return m.globalSection }
 
 func decode(r io.Reader) (*Module, error) {
 	var (
@@ -78,14 +82,20 @@ func decode(r io.Reader) (*Module, error) {
 				return nil, fmt.Errorf("failed to decode function section: %w", err)
 			}
 		case SectionCodeTable:
-			// TODO
+			module.tableSection, err = decodeTableSection(sectionContents)
+			if err != nil {
+				return nil, fmt.Errorf("failed to decode table section: %w", err)
+			}
 		case SectionCodeMemory:
 			module.memorySection, err = decodeMemorySection(sectionContents)
 			if err != nil {
 				return nil, fmt.Errorf("failed to decode memory section: %w", err)
 			}
 		case SectionCodeGlobal:
-			// TODO
+			module.globalSection, err = decodeGlobalSection(sectionContents)
+			if err != nil {
+				return nil, fmt.Errorf("failed to decode global section: %w", err)
+			}
 		case SectionCodeExport:
 			module.exportSection, err = decodeExportSection(sectionContents)
 			if err != nil {
@@ -489,4 +499,51 @@ func decodeDataSection(r io.Reader) ([]binary.Data, error) {
 	}
 
 	return data, nil
+}
+
+func decodeTableSection(r io.Reader) ([]binary.TableType, error) {
+	count, err := leb128.Uint32(r)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read table count: %w", err)
+	}
+
+	tables := make([]binary.TableType, 0, count)
+
+	for range count {
+		typ, err := readByte(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read element type: %w", err)
+		}
+		lim, err := decodeLimits(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode table limits: %w", err)
+		}
+		tables = append(tables, binary.TableType{ElementType: binary.RefType(typ), Limits: lim})
+	}
+
+	return tables, nil
+}
+
+func decodeGlobalSection(r io.Reader) ([]binary.GlobalType, error) {
+	count, err := leb128.Uint32(r)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read global count: %w", err)
+	}
+
+	globals := make([]binary.GlobalType, 0, count)
+
+	for range count {
+		typ, err := readByte(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read global type: %w", err)
+		}
+		mut, err := readByte(r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read global mutability: %w", err)
+		}
+
+		globals = append(globals, binary.GlobalType{ValueType: binary.ValueType(typ), Mutable: mut == 0x01})
+	}
+
+	return globals, nil
 }
