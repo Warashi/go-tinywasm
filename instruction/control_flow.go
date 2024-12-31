@@ -92,7 +92,7 @@ func (*Return) Opcode() opcode.Opcode { return opcode.OpcodeReturn }
 
 func (*Return) ReadOperandsFrom(io.Reader) error { return nil }
 
-func (*Return) Execute(r runtime.Runtime, f runtime.Frame) error {
+func (*Return) Execute(r runtime.Runtime, f *runtime.Frame) error {
 	frame, err := r.PopCallStack()
 	if err != nil {
 		return fmt.Errorf("failed to pop call stack: %w", err)
@@ -118,7 +118,7 @@ func (c *Call) ReadOperandsFrom(r io.Reader) error {
 
 func (c *Call) Index() uint32 { return c.index }
 
-func (c *Call) Execute(r runtime.Runtime, f runtime.Frame) error {
+func (c *Call) Execute(r runtime.Runtime, f *runtime.Frame) error {
 	funcInst, err := r.Func(int(c.index))
 	if err != nil {
 		return fmt.Errorf("failed to get function: %w", err)

@@ -18,7 +18,7 @@ func (i *I32Sub) ReadOperandsFrom(r io.Reader) error {
 	return nil
 }
 
-func (i *I32Sub) Execute(r runtime.Runtime, f runtime.Frame) error {
+func (i *I32Sub) Execute(r runtime.Runtime, f *runtime.Frame) error {
 	right, err := r.PopStack()
 	if err != nil {
 		return fmt.Errorf("failed to pop stack: %w", err)

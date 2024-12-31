@@ -26,7 +26,7 @@ func (i *LocalGet) ReadOperandsFrom(r io.Reader) error {
 	return err
 }
 
-func (i *LocalGet) Execute(r runtime.Runtime, f runtime.Frame) error {
+func (i *LocalGet) Execute(r runtime.Runtime, f *runtime.Frame) error {
 	if i.index < 0 || len(f.Locals) <= int(i.index) {
 		return runtime.ErrOutOfBounds
 	}
@@ -54,7 +54,7 @@ func (i *LocalSet) ReadOperandsFrom(r io.Reader) error {
 	return err
 }
 
-func (i *LocalSet) Execute(r runtime.Runtime, f runtime.Frame) error {
+func (i *LocalSet) Execute(r runtime.Runtime, f *runtime.Frame) error {
 	if i.index < 0 || len(f.Locals) <= int(i.index) {
 		return runtime.ErrOutOfBounds
 	}

@@ -26,7 +26,7 @@ func (i *I32Const) ReadOperandsFrom(r io.Reader) error {
 	return err
 }
 
-func (i *I32Const) Execute(r runtime.Runtime, f runtime.Frame) error {
+func (i *I32Const) Execute(r runtime.Runtime, f *runtime.Frame) error {
 	r.PushStack(runtime.ValueI32(i.value))
 	return nil
 }
@@ -49,7 +49,7 @@ func (i *I64Const) ReadOperandsFrom(r io.Reader) error {
 	return err
 }
 
-func (i *I64Const) Execute(r runtime.Runtime, f runtime.Frame) error {
+func (i *I64Const) Execute(r runtime.Runtime, f *runtime.Frame) error {
 	r.PushStack(runtime.ValueI64(i.value))
 	return nil
 }
@@ -72,7 +72,7 @@ func (i *F32Const) ReadOperandsFrom(r io.Reader) error {
 	return err
 }
 
-func (i *F32Const) Execute(r runtime.Runtime, f runtime.Frame) error {
+func (i *F32Const) Execute(r runtime.Runtime, f *runtime.Frame) error {
 	r.PushStack(runtime.ValueF32(i.value))
 	return nil
 }
@@ -95,7 +95,7 @@ func (i *F64Const) ReadOperandsFrom(r io.Reader) error {
 	return err
 }
 
-func (i *F64Const) Execute(r runtime.Runtime, f runtime.Frame) error {
+func (i *F64Const) Execute(r runtime.Runtime, f *runtime.Frame) error {
 	r.PushStack(runtime.ValueF64(i.value))
 	return nil
 }

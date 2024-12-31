@@ -37,7 +37,7 @@ func (i *I32Store) ReadOperandsFrom(r io.Reader) error {
 	return err
 }
 
-func (i *I32Store) Execute(r runtime.Runtime, f runtime.Frame) error {
+func (i *I32Store) Execute(r runtime.Runtime, f *runtime.Frame) error {
 	_, err := r.PopStack()
 	if err != nil {
 		return err
