@@ -27,7 +27,7 @@ func main() {
 
 	wasip1.NewWasiPreview1().Register(r)
 
-	if _, err := r.Call("_start", nil); err != nil {
+	if _, err := r.Call("_start"); err != nil {
 		log.Fatalln(err)
 	}
 }
