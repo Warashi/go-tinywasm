@@ -1,6 +1,8 @@
 package stack
 
-import "slices"
+import (
+	"slices"
+)
 
 type Stack[T any] []T
 
