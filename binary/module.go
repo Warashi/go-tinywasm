@@ -535,7 +535,7 @@ func decodeExpr(r io.Reader) (binary.Expr, error) {
 		}
 		value = binary.ExprGlobalIndex(v)
 	default:
-		return nil, fmt.Errorf("unsupported expr opcode: %s", opcode.Opcode(b))
+		return nil, fmt.Errorf("unsupported expr opcode: %v", opcode.Opcode(b))
 	}
 
 	b, err = readByte(r)
@@ -544,7 +544,7 @@ func decodeExpr(r io.Reader) (binary.Expr, error) {
 	}
 
 	if opcode.Opcode(b) != opcode.OpcodeEnd {
-		return nil, fmt.Errorf("invalid expr end opcode: %s", opcode.Opcode(b))
+		return nil, fmt.Errorf("invalid expr end opcode: %v", opcode.Opcode(b))
 	}
 
 	return value, nil
