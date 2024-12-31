@@ -15,6 +15,16 @@ type Runtime struct {
 	imports   Import
 }
 
+func (r *Runtime) AddImport(module string, name string, fn ImportFunc) {
+	if r.imports == nil {
+		r.imports = make(Import)
+	}
+	if _, ok := r.imports[module]; !ok {
+		r.imports[module] = make(map[string]ImportFunc)
+	}
+	r.imports[module][name] = fn
+}
+
 func (r *Runtime) WriteMemoryAt(n int, data []byte, offset int64) (int, error) {
 	if n < 0 || len(r.store.memories) <= n {
 		return 0, fmt.Errorf("invalid memory index: %d", n)
