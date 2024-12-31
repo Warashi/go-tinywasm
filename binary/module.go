@@ -77,16 +77,24 @@ func decode(r io.Reader) (*Module, error) {
 			if err != nil {
 				return nil, fmt.Errorf("failed to decode function section: %w", err)
 			}
+		case SectionCodeTable:
+			// TODO
 		case SectionCodeMemory:
 			module.memorySection, err = decodeMemorySection(sectionContents)
 			if err != nil {
 				return nil, fmt.Errorf("failed to decode memory section: %w", err)
 			}
+		case SectionCodeGlobal:
+			// TODO
 		case SectionCodeExport:
 			module.exportSection, err = decodeExportSection(sectionContents)
 			if err != nil {
 				return nil, fmt.Errorf("failed to decode export section: %w", err)
 			}
+		case SectionCodeStart:
+			// TODO
+		case SectionCodeElement:
+			// TODO
 		case SectionCodeCode:
 			module.codeSection, err = decodeCodeSection(sectionContents)
 			if err != nil {
@@ -97,6 +105,8 @@ func decode(r io.Reader) (*Module, error) {
 			if err != nil {
 				return nil, fmt.Errorf("failed to decode data section: %w", err)
 			}
+		case SectionCodeDataCount:
+			// TODO
 		default:
 			return nil, fmt.Errorf("unsupported section code: %d", code)
 		}
