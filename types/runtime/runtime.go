@@ -33,4 +33,5 @@ type Runtime interface {
 	InvokeExternal(ExternalFuncInst) ([]Value, error)
 
 	WriteMemoryAt(n int, data []byte, offset int64) (int, error)
+	ReadMemoryAt(n int, buf []byte, offset int64) (int, error)
 }

@@ -15,14 +15,6 @@ type I32Store struct {
 	offset uint32
 }
 
-func (i *I32Store) Align() uint32 {
-	return i.align
-}
-
-func (i *I32Store) Offset() uint32 {
-	return i.offset
-}
-
 func (i *I32Store) Opcode() opcode.Opcode {
 	return opcode.OpcodeI32Store
 }

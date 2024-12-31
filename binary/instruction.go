@@ -33,6 +33,10 @@ func fromOpcode(op opcode.Opcode) (inst, error) {
 		return new(instruction.GlobalGet), nil
 	case opcode.OpcodeGlobalSet:
 		return new(instruction.GlobalSet), nil
+	case opcode.OpcodeI32Load:
+		return new(instruction.I32Load), nil
+	case opcode.OpcodeI32Load8U:
+		return new(instruction.I32Load), nil
 	case opcode.OpcodeI32Store:
 		return new(instruction.I32Store), nil
 	case opcode.OpcodeI32Const:
@@ -44,6 +48,6 @@ func fromOpcode(op opcode.Opcode) (inst, error) {
 	case opcode.OpcodeI32Sub:
 		return new(instruction.I32Sub), nil
 	default:
-		return nil, fmt.Errorf("unknown opcode: 0x%2x", op)
+		return nil, fmt.Errorf("unknown opcode: %d", op)
 	}
 }
