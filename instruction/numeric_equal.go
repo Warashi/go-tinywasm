@@ -3,13 +3,13 @@ package instruction
 import (
 	"io"
 
-	"github.com/Warashi/go-tinywasm/binary"
+	"github.com/Warashi/go-tinywasm/opcode"
 )
 
 type I32Eqz struct{}
 
-func (i *I32Eqz) Opcode() binary.Opcode {
-	return binary.OpcodeI32Eqz
+func (i *I32Eqz) Opcode() opcode.Opcode {
+	return opcode.OpcodeI32Eqz
 }
 
 func (i *I32Eqz) ReadOperandsFrom(r io.Reader) error {
@@ -18,8 +18,8 @@ func (i *I32Eqz) ReadOperandsFrom(r io.Reader) error {
 
 type I32Eq struct{}
 
-func (i *I32Eq) Opcode() binary.Opcode {
-	return binary.OpcodeI32Eq
+func (i *I32Eq) Opcode() opcode.Opcode {
+	return opcode.OpcodeI32Eq
 }
 
 func (i *I32Eq) ReadOperandsFrom(r io.Reader) error {
@@ -28,8 +28,8 @@ func (i *I32Eq) ReadOperandsFrom(r io.Reader) error {
 
 type I64Eqz struct{}
 
-func (i *I64Eqz) Opcode() binary.Opcode {
-	return binary.OpcodeI64Eqz
+func (i *I64Eqz) Opcode() opcode.Opcode {
+	return opcode.OpcodeI64Eqz
 }
 
 func (i *I64Eqz) ReadOperandsFrom(r io.Reader) error {
@@ -38,8 +38,8 @@ func (i *I64Eqz) ReadOperandsFrom(r io.Reader) error {
 
 type I64Eq struct{}
 
-func (i *I64Eq) Opcode() binary.Opcode {
-	return binary.OpcodeI64Eq
+func (i *I64Eq) Opcode() opcode.Opcode {
+	return opcode.OpcodeI64Eq
 }
 
 func (i *I64Eq) ReadOperandsFrom(r io.Reader) error {
@@ -48,8 +48,8 @@ func (i *I64Eq) ReadOperandsFrom(r io.Reader) error {
 
 type F32Eq struct{}
 
-func (f *F32Eq) Opcode() binary.Opcode {
-	return binary.OpcodeF32Eq
+func (f *F32Eq) Opcode() opcode.Opcode {
+	return opcode.OpcodeF32Eq
 }
 
 func (f *F32Eq) ReadOperandsFrom(r io.Reader) error {
@@ -58,8 +58,8 @@ func (f *F32Eq) ReadOperandsFrom(r io.Reader) error {
 
 type F64Eq struct{}
 
-func (f *F64Eq) Opcode() binary.Opcode {
-	return binary.OpcodeF64Eq
+func (f *F64Eq) Opcode() opcode.Opcode {
+	return opcode.OpcodeF64Eq
 }
 
 func (f *F64Eq) ReadOperandsFrom(r io.Reader) error {
