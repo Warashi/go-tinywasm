@@ -93,6 +93,7 @@ type Label struct {
 func NewLabel(kind LabelKind, start, pc, sp, arity int) Label {
 	return Label{
 		kind:           kind,
+		start:          start,
 		programCounter: pc,
 		stackPointer:   sp,
 		arity:          arity,
