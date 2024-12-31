@@ -85,12 +85,13 @@ const (
 
 type Label struct {
 	kind           LabelKind
+	start          int
 	programCounter int
 	stackPointer   int
 	arity          int
 }
 
-func NewLabel(kind LabelKind, pc, sp, arity int) Label {
+func NewLabel(kind LabelKind, start, pc, sp, arity int) Label {
 	return Label{
 		kind:           kind,
 		programCounter: pc,

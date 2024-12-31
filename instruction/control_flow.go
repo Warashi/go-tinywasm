@@ -10,10 +10,6 @@ import (
 	"github.com/Warashi/wasmium/types/runtime"
 )
 
-type If struct {
-	Block binary.Block
-}
-
 func decodeBlock(r io.Reader) (binary.Block, error) {
 	var buf [1]byte
 
@@ -29,6 +25,59 @@ func decodeBlock(r io.Reader) (binary.Block, error) {
 	}
 }
 
+func getEndAddress(insts []runtime.Instruction, programCounter int) (int, error) {
+	depth := 0
+	for {
+		programCounter++
+		if programCounter < 0 || len(insts) <= programCounter {
+			return 0, fmt.Errorf("unexpected end of instructions")
+		}
+
+		switch insts[programCounter].(type) {
+		case *If:
+			depth++
+		// TODO case *Blodk:
+		case *Loop:
+			depth++
+		case *End:
+			if depth == 0 {
+				return programCounter, nil
+			}
+			depth--
+		default:
+			// do nothing
+		}
+	}
+}
+
+type Loop struct {
+	Block binary.Block
+}
+
+func (*Loop) Opcode() opcode.Opcode { return opcode.OpcodeLoop }
+func (l *Loop) ReadOperandsFrom(r io.Reader) error {
+	var err error
+	l.Block, err = decodeBlock(r)
+	return err
+}
+
+func (l *Loop) Execute(r runtime.Runtime, f *runtime.Frame) error {
+	arity := l.Block.BlockType.ResultCount()
+	startProgramCounter := f.ProgramCounter
+	programCounter, err := getEndAddress(f.Instructions, f.ProgramCounter)
+	if err != nil {
+		return fmt.Errorf("failed to get end address: %w", err)
+	}
+
+	f.Labels.Push(runtime.NewLabel(runtime.LabelKindLoop, startProgramCounter, programCounter, r.StackLen(), arity))
+
+	return nil
+}
+
+type If struct {
+	Block binary.Block
+}
+
 func (*If) Opcode() opcode.Opcode { return opcode.OpcodeIf }
 func (i *If) ReadOperandsFrom(r io.Reader) error {
 	var err error
@@ -41,7 +90,7 @@ func (i *If) Execute(r runtime.Runtime, f *runtime.Frame) error {
 		return fmt.Errorf("failed to pop stack: %w", err)
 	}
 
-	nextProgramCounter, err := i.getEndAddress(f.Instructions, f.ProgramCounter)
+	nextProgramCounter, err := getEndAddress(f.Instructions, f.ProgramCounter)
 	if err != nil {
 		return fmt.Errorf("failed to get end address: %w", err)
 	}
@@ -50,31 +99,9 @@ func (i *If) Execute(r runtime.Runtime, f *runtime.Frame) error {
 		f.ProgramCounter = nextProgramCounter
 	}
 
-	f.Labels.Push(runtime.NewLabel(runtime.LabelKindIf, nextProgramCounter, r.StackLen(), i.Block.BlockType.ResultCount()))
+	f.Labels.Push(runtime.NewLabel(runtime.LabelKindIf, 0, nextProgramCounter, r.StackLen(), i.Block.BlockType.ResultCount()))
 
 	return nil
-}
-
-func (*If) getEndAddress(insts []runtime.Instruction, programCounter int) (int, error) {
-	depth := 0
-	for {
-		programCounter++
-		if programCounter < 0 || len(insts) <= programCounter {
-			return 0, fmt.Errorf("unexpected end of instructions")
-		}
-
-		switch insts[programCounter].(type) {
-		case *If:
-			depth++
-		case *End:
-			if depth == 0 {
-				return programCounter, nil
-			}
-			depth--
-		default:
-			// do nothing
-		}
-	}
 }
 
 type End struct{}
