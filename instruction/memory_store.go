@@ -42,7 +42,7 @@ func (i *I32Store) Execute(r runtime.Runtime, f *runtime.Frame) error {
 
 	v, ok := value.(runtime.ValueI32)
 	if !ok {
-		return fmt.Errorf("invalid value(%T): %w", addr, runtime.ErrInvalidValue)
+		return fmt.Errorf("invalid value(%T): %w", value, runtime.ErrInvalidValue)
 	}
 
 	a, ok := addr.(runtime.ValueI32)
@@ -95,7 +95,7 @@ func (i *I32Store8) Execute(r runtime.Runtime, f *runtime.Frame) error {
 
 	v, ok := value.(runtime.ValueI32)
 	if !ok {
-		return fmt.Errorf("invalid value(%T): %w", addr, runtime.ErrInvalidValue)
+		return fmt.Errorf("invalid value(%T): %w", value, runtime.ErrInvalidValue)
 	}
 
 	a, ok := addr.(runtime.ValueI32)
