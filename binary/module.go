@@ -353,6 +353,12 @@ func decodeExportSection(r io.Reader) ([]binary.Export, error) {
 		switch kind {
 		case 0x00:
 			exports = append(exports, binary.Export{Name: name, Desc: binary.ExportDescFunc{Index: index}})
+		case 0x01:
+			exports = append(exports, binary.Export{Name: name, Desc: binary.ExportDescTable{Index: index}})
+		case 0x02:
+			exports = append(exports, binary.Export{Name: name, Desc: binary.ExportDescMemory{Index: index}})
+		case 0x03:
+			exports = append(exports, binary.Export{Name: name, Desc: binary.ExportDescGlobal{Index: index}})
 		default:
 			return nil, fmt.Errorf("unsupported export kind: %2x", kind)
 		}

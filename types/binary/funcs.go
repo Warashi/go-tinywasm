@@ -33,21 +33,6 @@ type FunctionLocal struct {
 	ValueType ValueType
 }
 
-type ExportDesc interface {
-	isExportDesc()
-}
-
-type ExportDescFunc struct {
-	Index uint32
-}
-
-func (e ExportDescFunc) isExportDesc() {}
-
-type Export struct {
-	Name string
-	Desc ExportDesc
-}
-
 type ImportDesc interface {
 	isImportDesc()
 }
