@@ -104,6 +104,10 @@ func (l Label) Kind() LabelKind {
 	return l.kind
 }
 
+func (l Label) Start() int {
+	return l.start
+}
+
 func (l Label) ProgramCounter() int {
 	return l.programCounter
 }

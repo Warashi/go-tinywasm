@@ -21,6 +21,8 @@ func fromOpcode(op opcode.Opcode) (inst, error) {
 		return new(instruction.If), nil
 	case opcode.OpcodeEnd:
 		return new(instruction.End), nil
+	case opcode.OpcodeBr:
+		return new(instruction.Br), nil
 	case opcode.OpcodeReturn:
 		return new(instruction.Return), nil
 	case opcode.OpcodeCall:
