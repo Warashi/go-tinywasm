@@ -1,6 +1,6 @@
 package runtime
 
-import "github.com/Warashi/go-tinywasm/types/runtime"
+import "github.com/Warashi/wasmium/types/runtime"
 
 func (r *Runtime) Store() *Store {
 	return r.store

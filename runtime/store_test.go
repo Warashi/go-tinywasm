@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Warashi/go-tinywasm/binary"
+	"github.com/Warashi/wasmium/binary"
 )
 
 func TestInitMemory(t *testing.T) {

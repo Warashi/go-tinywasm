@@ -6,8 +6,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Warashi/go-tinywasm/instruction"
-	"github.com/Warashi/go-tinywasm/types/binary"
+	"github.com/Warashi/wasmium/instruction"
+	"github.com/Warashi/wasmium/types/binary"
 )
 
 func TestDecodePreamble(t *testing.T) {

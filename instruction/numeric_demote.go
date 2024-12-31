@@ -3,7 +3,7 @@ package instruction
 import (
 	"io"
 
-	"github.com/Warashi/go-tinywasm/opcode"
+	"github.com/Warashi/wasmium/opcode"
 )
 
 type F32DemoteF64 struct{}

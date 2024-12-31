@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"iter"
 
-	"github.com/Warashi/go-tinywasm/binary"
-	tbinary "github.com/Warashi/go-tinywasm/types/binary"
-	"github.com/Warashi/go-tinywasm/types/instruction"
-	"github.com/Warashi/go-tinywasm/types/runtime"
+	"github.com/Warashi/wasmium/binary"
+	tbinary "github.com/Warashi/wasmium/types/binary"
+	"github.com/Warashi/wasmium/types/instruction"
+	"github.com/Warashi/wasmium/types/runtime"
 )
 
 const PageSize = 65536 // 64 Ki

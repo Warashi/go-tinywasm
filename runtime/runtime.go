@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"io"
 
-	bin "github.com/Warashi/go-tinywasm/binary"
-	"github.com/Warashi/go-tinywasm/stack"
-	"github.com/Warashi/go-tinywasm/types/binary"
-	"github.com/Warashi/go-tinywasm/types/runtime"
+	bin "github.com/Warashi/wasmium/binary"
+	"github.com/Warashi/wasmium/stack"
+	"github.com/Warashi/wasmium/types/binary"
+	"github.com/Warashi/wasmium/types/runtime"
 )
 
 type Runtime struct {

@@ -3,8 +3,8 @@ package instruction
 import (
 	"fmt"
 
-	"github.com/Warashi/go-tinywasm/types/binary"
-	"github.com/Warashi/go-tinywasm/types/runtime"
+	"github.com/Warashi/wasmium/types/binary"
+	"github.com/Warashi/wasmium/types/runtime"
 )
 
 var ErrInvalidInstruction = fmt.Errorf("invalid instruction")

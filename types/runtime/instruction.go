@@ -1,7 +1,7 @@
 package runtime
 
 import (
-	"github.com/Warashi/go-tinywasm/stack"
+	"github.com/Warashi/wasmium/stack"
 )
 
 type Instruction interface {

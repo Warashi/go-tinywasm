@@ -1,3 +1,3 @@
-module github.com/Warashi/go-tinywasm
+module github.com/Warashi/wasmium
 
 go 1.23.4

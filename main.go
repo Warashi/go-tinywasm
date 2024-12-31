@@ -5,8 +5,8 @@ import (
 	_ "embed"
 	"log"
 
-	"github.com/Warashi/go-tinywasm/runtime"
-	"github.com/Warashi/go-tinywasm/wasip1"
+	"github.com/Warashi/wasmium/runtime"
+	"github.com/Warashi/wasmium/wasip1"
 )
 
 //go:embed testdata/hello_world.wasm

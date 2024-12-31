@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/Warashi/go-tinywasm/opcode"
-	"github.com/Warashi/go-tinywasm/types/runtime"
+	"github.com/Warashi/wasmium/opcode"
+	"github.com/Warashi/wasmium/types/runtime"
 )
 
 type I32LtS struct{}

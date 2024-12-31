@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/Warashi/go-tinywasm/leb128"
-	"github.com/Warashi/go-tinywasm/opcode"
-	"github.com/Warashi/go-tinywasm/types/runtime"
+	"github.com/Warashi/wasmium/leb128"
+	"github.com/Warashi/wasmium/opcode"
+	"github.com/Warashi/wasmium/types/runtime"
 )
 
 type I32Store struct {

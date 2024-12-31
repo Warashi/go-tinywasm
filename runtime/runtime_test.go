@@ -6,9 +6,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Warashi/go-tinywasm/runtime"
+	"github.com/Warashi/wasmium/runtime"
 
-	typesRuntime "github.com/Warashi/go-tinywasm/types/runtime"
+	typesRuntime "github.com/Warashi/wasmium/types/runtime"
 )
 
 func TestExecuteI32Add(t *testing.T) {

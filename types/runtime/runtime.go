@@ -3,7 +3,7 @@ package runtime
 import (
 	"fmt"
 
-	"github.com/Warashi/go-tinywasm/stack"
+	"github.com/Warashi/wasmium/stack"
 )
 
 var (

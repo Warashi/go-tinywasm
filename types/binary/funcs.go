@@ -3,7 +3,7 @@ package binary
 import (
 	"io"
 
-	"github.com/Warashi/go-tinywasm/opcode"
+	"github.com/Warashi/wasmium/opcode"
 )
 
 type Instruction interface {

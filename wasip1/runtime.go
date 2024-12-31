@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	runtime "github.com/Warashi/go-tinywasm/runtime"
-	tr "github.com/Warashi/go-tinywasm/types/runtime"
+	runtime "github.com/Warashi/wasmium/runtime"
+	tr "github.com/Warashi/wasmium/types/runtime"
 )
 
 type Runtime interface {

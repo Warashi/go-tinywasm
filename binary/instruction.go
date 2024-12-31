@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/Warashi/go-tinywasm/instruction"
-	"github.com/Warashi/go-tinywasm/opcode"
+	"github.com/Warashi/wasmium/instruction"
+	"github.com/Warashi/wasmium/opcode"
 )
 
 type inst interface {
