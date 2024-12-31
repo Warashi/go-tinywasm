@@ -152,3 +152,14 @@ func (c *Call) Execute(r runtime.Runtime, f *runtime.Frame) error {
 	}
 	return nil
 }
+
+type Drop struct{}
+
+func (*Drop) Opcode() opcode.Opcode { return opcode.OpcodeDrop }
+
+func (*Drop) ReadOperandsFrom(io.Reader) error { return nil }
+
+func (*Drop) Execute(r runtime.Runtime, f *runtime.Frame) error {
+	_, err := r.PopStack()
+	return err
+}
