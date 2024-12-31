@@ -2,7 +2,9 @@ package runtime
 
 import (
 	"fmt"
+	"io"
 
+	bin "github.com/Warashi/go-tinywasm/binary"
 	"github.com/Warashi/go-tinywasm/stack"
 	"github.com/Warashi/go-tinywasm/types/binary"
 	"github.com/Warashi/go-tinywasm/types/runtime"
@@ -13,6 +15,53 @@ type Runtime struct {
 	stack     stack.Stack[runtime.Value]
 	callStack stack.Stack[*runtime.Frame]
 	imports   Import
+}
+
+func New(r io.Reader) (*Runtime, error) {
+	module, err := bin.NewModule(r)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create module: %w", err)
+	}
+
+	store, err := NewStore(module)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create store: %w", err)
+	}
+
+	return &Runtime{
+		store: store,
+	}, nil
+}
+
+func (r *Runtime) Call(name string, args ...runtime.Value) ([]runtime.Value, error) {
+	export, ok := r.store.module.Exported(name)
+	if !ok {
+		return nil, fmt.Errorf("export not found: %s", name)
+	}
+
+	switch desc := export.Desc.(type) {
+	case binary.ExportDescFunc:
+		if desc.Index < 0 || len(r.store.funcs) <= int(desc.Index) {
+			return nil, fmt.Errorf("invalid function index: %d", desc.Index)
+		}
+
+		f := r.store.funcs[desc.Index]
+
+		for _, arg := range args {
+			r.stack.Push(arg)
+		}
+
+		switch f := f.(type) {
+		case runtime.InternalFuncInst:
+			return r.InvokeInternal(f)
+		case runtime.ExternalFuncInst:
+			return r.InvokeExternal(f)
+		default:
+			return nil, fmt.Errorf("unexpected function instance: %T", f)
+		}
+	}
+
+	return nil, fmt.Errorf("unexpected export description: %T", export.Desc)
 }
 
 func (r *Runtime) AddImport(module string, name string, fn ImportFunc) {
