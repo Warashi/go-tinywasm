@@ -37,7 +37,8 @@
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "testsuite": "testsuite"
       }
     },
     "systems": {
@@ -52,6 +53,24 @@
       "original": {
         "owner": "nix-systems",
         "repo": "default",
+        "type": "github"
+      }
+    },
+    "testsuite": {
+      "flake": false,
+      "locked": {
+        "dir": "test/core",
+        "lastModified": 1734653836,
+        "narHash": "sha256-7AJ7UoY+TNpdSl7EhaN+ePtL5CUgq+HsJPxV7f1xH8E=",
+        "owner": "WebAssembly",
+        "repo": "spec",
+        "rev": "f3a0e06235d2d84bb0f3b5014da4370613886965",
+        "type": "github"
+      },
+      "original": {
+        "dir": "test/core",
+        "owner": "WebAssembly",
+        "repo": "spec",
         "type": "github"
       }
     }

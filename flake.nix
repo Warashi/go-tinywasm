@@ -2,6 +2,10 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
+    testsuite = {
+      url = "github:WebAssembly/spec?dir=test/core";
+      flake = false;
+    };
   };
 
   outputs =
