@@ -30,6 +30,7 @@
             GOTOOLCHAIN = "local";
             buildInputs = [
               go
+              gotools
               wabt
             ];
           };

@@ -54,6 +54,6 @@ func fromOpcode(op opcode.Opcode) (inst, error) {
 	case opcode.OpcodeI32Sub:
 		return new(instruction.I32Sub), nil
 	default:
-		return nil, fmt.Errorf("unknown opcode: %d", op)
+		return nil, fmt.Errorf("unknown opcode: %v", op)
 	}
 }

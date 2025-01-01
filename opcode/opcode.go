@@ -1,5 +1,6 @@
 package opcode
 
+//go:generate stringer -type=Opcode
 type Opcode byte
 
 const (
