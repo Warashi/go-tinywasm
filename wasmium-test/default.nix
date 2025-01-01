@@ -16,7 +16,7 @@ rec {
     name = "wasmium-test";
     text = ''
       echo "Running tests"
-      for f in ${testsuite-json}/*; do
+      for f in ${testsuite-json}/*.json; do
         echo "Running $f"
         ${wasmium-test}/bin/wasmium-test "$f"
       done

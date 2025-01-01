@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"reflect"
 	"runtime/pprof"
 	"strconv"
@@ -48,6 +49,8 @@ func main() {
 	flag.BoolVar(&prof, "prof", false, "record cpuprofile with profile.out")
 	flag.Parse()
 
+	baseDir := filepath.Dir(flag.Arg(0))
+
 	if prof {
 		f, err := os.Create("profile.out")
 		if err != nil {
@@ -80,7 +83,7 @@ func main() {
 	for _, cmd := range wast.Commands {
 		switch cmd.Type {
 		case "module":
-			f, err := os.Open(cmd.Filename)
+			f, err := os.Open(filepath.Join(baseDir, cmd.Filename))
 			if err != nil {
 				log.Fatalln(err)
 			}
