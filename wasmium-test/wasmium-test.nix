@@ -8,7 +8,7 @@ buildGoModule {
   version = "dev";
   vendorHash = null;
 
-  src = ./.;
+  src = ../.;
 
   subPackages = [ "wasmium-test" ];
 
