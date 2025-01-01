@@ -38,7 +38,7 @@
       "inputs": {
         "flake-utils": "flake-utils",
         "nixpkgs": "nixpkgs",
-        "testsuite": "testsuite"
+        "wasm-spec": "wasm-spec"
       }
     },
     "systems": {
@@ -56,10 +56,9 @@
         "type": "github"
       }
     },
-    "testsuite": {
+    "wasm-spec": {
       "flake": false,
       "locked": {
-        "dir": "test/core",
         "lastModified": 1734653836,
         "narHash": "sha256-7AJ7UoY+TNpdSl7EhaN+ePtL5CUgq+HsJPxV7f1xH8E=",
         "owner": "WebAssembly",
@@ -68,7 +67,6 @@
         "type": "github"
       },
       "original": {
-        "dir": "test/core",
         "owner": "WebAssembly",
         "repo": "spec",
         "type": "github"

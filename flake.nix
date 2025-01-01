@@ -2,8 +2,8 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    testsuite = {
-      url = "github:WebAssembly/spec?dir=test/core";
+    wasm-spec = {
+      url = "github:WebAssembly/spec";
       flake = false;
     };
   };
@@ -12,6 +12,7 @@
     {
       flake-utils,
       nixpkgs,
+      wasm-spec,
       ...
     }:
     flake-utils.lib.eachDefaultSystem (
@@ -32,6 +33,12 @@
               wabt
             ];
           };
+        packages = rec {
+          wasmium-test = pkgs.callPackage ./wasmium-test.nix { };
+          test = import ./wasmium-test {
+            inherit pkgs wasm-spec wasmium-test;
+          };
+        };
       }
     );
 }
