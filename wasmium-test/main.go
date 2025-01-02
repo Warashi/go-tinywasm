@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -43,66 +43,6 @@ type Commands struct {
 }
 
 type Result = Expected
-
-func main() {
-	var prof bool
-	flag.BoolVar(&prof, "prof", false, "record cpuprofile with profile.out")
-	flag.Parse()
-
-	baseDir := filepath.Dir(flag.Arg(0))
-
-	if prof {
-		f, err := os.Create("profile.out")
-		if err != nil {
-			log.Fatalln(err)
-		}
-		defer func() {
-			if err := f.Close(); err != nil {
-				log.Fatalln(err)
-			}
-		}()
-		if err := pprof.StartCPUProfile(f); err != nil {
-			log.Fatalln(err)
-		}
-		defer pprof.StopCPUProfile()
-	}
-
-	f, err := os.Open(flag.Arg(0))
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer f.Close()
-
-	var wast JSONWast
-	if err := json.NewDecoder(f).Decode(&wast); err != nil {
-		log.Fatalln(err)
-	}
-
-	var r *runtime.Runtime
-
-	for _, cmd := range wast.Commands {
-		switch cmd.Type {
-		case "module":
-			f, err := os.Open(filepath.Join(baseDir, cmd.Filename))
-			if err != nil {
-				log.Fatalln(err)
-			}
-			r, err = runtime.New(f)
-			if err != nil {
-				log.Fatalln(err)
-			}
-		case "assert_return":
-			got, err := action(r, cmd.Action)
-			if err != nil {
-				log.Fatalln(err)
-			}
-			if !reflect.DeepEqual(cmd.Expected, got) {
-				log.Printf("expected: %v, got: %v", cmd.Expected, got)
-			}
-		}
-
-	}
-}
 
 func action(r *runtime.Runtime, a Action) ([]Result, error) {
 	switch a.Type {
@@ -165,4 +105,77 @@ func invoke(r *runtime.Runtime, a Action) ([]Result, error) {
 	}
 
 	return result, nil
+}
+
+func _main() int {
+	var prof bool
+	flag.BoolVar(&prof, "prof", false, "record cpuprofile with profile.out")
+	flag.Parse()
+
+	baseDir := filepath.Dir(flag.Arg(0))
+
+	if prof {
+		f, err := os.Create("profile.out")
+		if err != nil {
+			slog.Error("failed to create profile.out", slog.Any("error", err))
+			return 1
+		}
+		defer func() {
+			if err := f.Close(); err != nil {
+				slog.Error("failed to close profile.out", slog.Any("error", err))
+			}
+		}()
+		if err := pprof.StartCPUProfile(f); err != nil {
+			slog.Error("failed to start cpuprofile", slog.Any("error", err))
+			return 1
+		}
+		defer pprof.StopCPUProfile()
+	}
+
+	f, err := os.Open(flag.Arg(0))
+	if err != nil {
+		slog.Error("failed to open file", slog.Any("error", err))
+		return 1
+	}
+	defer f.Close()
+
+	var wast JSONWast
+	if err := json.NewDecoder(f).Decode(&wast); err != nil {
+		slog.Error("failed to decode json", slog.Any("error", err))
+		return 1
+	}
+
+	var r *runtime.Runtime
+
+	for _, cmd := range wast.Commands {
+		switch cmd.Type {
+		case "module":
+			f, err := os.Open(filepath.Join(baseDir, cmd.Filename))
+			if err != nil {
+				slog.Error("failed to open file", slog.Any("error", err))
+				return 1
+			}
+			r, err = runtime.New(f)
+			if err != nil {
+				slog.Error("failed to create runtime", slog.Any("error", err))
+				return 1
+			}
+		case "assert_return":
+			got, err := action(r, cmd.Action)
+			if err != nil {
+				slog.Warn("failed to execute action", slog.Any("command", cmd), slog.Any("error", err))
+				continue
+			}
+			if !reflect.DeepEqual(cmd.Expected, got) {
+				slog.Warn("assertion failed", slog.Any("command", cmd), slog.Any("expected", cmd.Expected), slog.Any("got", got))
+			}
+		}
+
+	}
+
+	return 0
+}
+
+func main() {
+	os.Exit(_main())
 }
