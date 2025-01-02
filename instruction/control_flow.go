@@ -36,7 +36,8 @@ func getEndAddress(insts []runtime.Instruction, programCounter int) (int, error)
 		switch insts[programCounter].(type) {
 		case *If:
 			depth++
-		// TODO case *Blodk:
+		case *Block:
+			depth++
 		case *Loop:
 			depth++
 		case *End:
