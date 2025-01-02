@@ -71,6 +71,14 @@ func fromOpcode(op opcode.Opcode) (inst, error) {
 		return new(instruction.I64Store), nil
 	case opcode.OpcodeI32Store8:
 		return new(instruction.I32Store8), nil
+	case opcode.OpcodeI32Store16:
+		return new(instruction.I32Store16), nil
+	case opcode.OpcodeI64Store8:
+		return new(instruction.I64Store8), nil
+	case opcode.OpcodeI64Store16:
+		return new(instruction.I64Store16), nil
+	case opcode.OpcodeI64Store32:
+		return new(instruction.I64Store32), nil
 	case opcode.OpcodeI32Const:
 		return new(instruction.I32Const), nil
 	case opcode.OpcodeI32LtS:
