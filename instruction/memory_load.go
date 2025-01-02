@@ -611,3 +611,103 @@ func (i *I64Load32S) Execute(r runtime.Runtime, f *runtime.Frame) error {
 
 	return nil
 }
+
+type F32Load struct {
+	Align  uint32
+	Offset uint32
+}
+
+func (i *F32Load) Opcode() opcode.Opcode {
+	return opcode.OpcodeF32Load
+}
+
+func (i *F32Load) ReadOperandsFrom(r io.Reader) error {
+	var err error
+	i.Align, err = leb128.Uint32(r)
+	if err != nil {
+		return fmt.Errorf("failed to read align: %w", err)
+	}
+
+	i.Offset, err = leb128.Uint32(r)
+	if err != nil {
+		return fmt.Errorf("failed to read offset: %w", err)
+	}
+
+	return nil
+}
+
+func (i *F32Load) Execute(r runtime.Runtime, f *runtime.Frame) error {
+	addr, err := r.PopStack()
+	if err != nil {
+		return err
+	}
+
+	a, ok := addr.(runtime.ValueI32)
+	if !ok {
+		return fmt.Errorf("invalid addr(%T): %w", addr, runtime.ErrInvalidValue)
+	}
+
+	var buf [4]byte
+	if n, err := r.ReadMemoryAt(0, buf[:], int64(uint32(a)+i.Offset)); err != nil || n != len(buf) {
+		return fmt.Errorf("failed to read memory(%d): %w", n, err)
+	}
+
+	var result float32
+	if _, err := binary.Decode(buf[:], binary.LittleEndian, &result); err != nil {
+		return fmt.Errorf("failed to decode value: %w", err)
+	}
+
+	r.PushStack(runtime.ValueF32(result))
+
+	return nil
+}
+
+type F64Load struct {
+	Align  uint32
+	Offset uint32
+}
+
+func (i *F64Load) Opcode() opcode.Opcode {
+	return opcode.OpcodeF64Load
+}
+
+func (i *F64Load) ReadOperandsFrom(r io.Reader) error {
+	var err error
+	i.Align, err = leb128.Uint32(r)
+	if err != nil {
+		return fmt.Errorf("failed to read align: %w", err)
+	}
+
+	i.Offset, err = leb128.Uint32(r)
+	if err != nil {
+		return fmt.Errorf("failed to read offset: %w", err)
+	}
+
+	return nil
+}
+
+func (i *F64Load) Execute(r runtime.Runtime, f *runtime.Frame) error {
+	addr, err := r.PopStack()
+	if err != nil {
+		return err
+	}
+
+	a, ok := addr.(runtime.ValueI32)
+	if !ok {
+		return fmt.Errorf("invalid addr(%T): %w", addr, runtime.ErrInvalidValue)
+	}
+
+	var buf [8]byte
+	if n, err := r.ReadMemoryAt(0, buf[:], int64(uint32(a)+i.Offset)); err != nil || n != len(buf) {
+		return fmt.Errorf("failed to read memory(%d): %w", n, err)
+	}
+
+	var result float64
+	if _, err := binary.Decode(buf[:], binary.LittleEndian, &result); err != nil {
+		return fmt.Errorf("failed to decode value: %w", err)
+	}
+
+	r.PushStack(runtime.ValueF64(result))
+
+	return nil
+}

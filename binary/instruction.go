@@ -41,6 +41,10 @@ func fromOpcode(op opcode.Opcode) (inst, error) {
 		return new(instruction.I32Load), nil
 	case opcode.OpcodeI64Load:
 		return new(instruction.I64Load), nil
+	case opcode.OpcodeF32Load:
+		return new(instruction.F32Load), nil
+	case opcode.OpcodeF64Load:
+		return new(instruction.F64Load), nil
 	case opcode.OpcodeI32Load8S:
 		return new(instruction.I32Load8S), nil
 	case opcode.OpcodeI32Load8U:
