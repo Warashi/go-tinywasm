@@ -43,10 +43,17 @@ func NewStore(module *binary.Module) (*Store, error) {
 	for body, typeIdx := range zipSlice(module.CodeSection(), module.FunctionSection()) {
 		funcType := module.TypeSection()[typeIdx]
 
-		locals := make([]tbinary.ValueType, 0, len(body.Locals))
+		localslen := 0
 
 		for _, local := range body.Locals {
-			locals = append(locals, local.ValueType)
+			localslen += int(local.TypeCount)
+		}
+		locals := make([]tbinary.ValueType, 0, localslen)
+
+		for _, local := range body.Locals {
+			for range local.TypeCount {
+				locals = append(locals, local.ValueType)
+			}
 		}
 
 		insts, err := instruction.Convert(body.Code)
