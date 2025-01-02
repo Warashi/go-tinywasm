@@ -60,6 +60,57 @@ func (i *I32Load) Execute(r runtime.Runtime, f *runtime.Frame) error {
 	return nil
 }
 
+type I32Load8S struct {
+	Align  uint32
+	Offset uint32
+}
+
+func (i *I32Load8S) Opcode() opcode.Opcode {
+	return opcode.OpcodeI32Load8S
+}
+
+func (i *I32Load8S) ReadOperandsFrom(r io.Reader) error {
+	var err error
+	i.Align, err = leb128.Uint32(r)
+	if err != nil {
+		return fmt.Errorf("failed to read align: %w", err)
+	}
+
+	i.Offset, err = leb128.Uint32(r)
+	if err != nil {
+		return fmt.Errorf("failed to read offset: %w", err)
+	}
+
+	return nil
+}
+
+func (i *I32Load8S) Execute(r runtime.Runtime, f *runtime.Frame) error {
+	addr, err := r.PopStack()
+	if err != nil {
+		return err
+	}
+
+	a, ok := addr.(runtime.ValueI32)
+	if !ok {
+		return fmt.Errorf("invalid addr(%T): %w", addr, runtime.ErrInvalidValue)
+	}
+
+	var buf [1]byte
+	if n, err := r.ReadMemoryAt(0, buf[:], int64(uint32(a)+i.Offset)); err != nil || n != len(buf) {
+		return fmt.Errorf("failed to read memory(%d): %w", n, err)
+	}
+
+	var result int8
+	if _, err := binary.Decode(buf[:], binary.LittleEndian, &result); err != nil {
+		return fmt.Errorf("failed to decode value: %w", err)
+	}
+
+	r.PushStack(runtime.ValueI32(result))
+
+	return nil
+
+}
+
 type I32Load8U struct {
 	Align  uint32
 	Offset uint32

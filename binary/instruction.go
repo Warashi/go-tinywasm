@@ -39,6 +39,8 @@ func fromOpcode(op opcode.Opcode) (inst, error) {
 		return new(instruction.GlobalSet), nil
 	case opcode.OpcodeI32Load:
 		return new(instruction.I32Load), nil
+	case opcode.OpcodeI32Load8S:
+		return new(instruction.I32Load8S), nil
 	case opcode.OpcodeI32Load8U:
 		return new(instruction.I32Load8U), nil
 	case opcode.OpcodeI32Store:
