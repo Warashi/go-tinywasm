@@ -97,8 +97,74 @@ func fromOpcode(op opcode.Opcode) (inst, error) {
 		return new(instruction.F32Const), nil
 	case opcode.OpcodeF64Const:
 		return new(instruction.F64Const), nil
+	case opcode.OpcodeI32Eqz:
+		return new(instruction.I32Eqz), nil
+	case opcode.OpcodeI32Eq:
+		return new(instruction.I32Eq), nil
+	case opcode.OpcodeI32Ne:
+		return new(instruction.I32Ne), nil
 	case opcode.OpcodeI32LtS:
 		return new(instruction.I32LtS), nil
+	case opcode.OpcodeI32LtU:
+		return new(instruction.I32LtU), nil
+	case opcode.OpcodeI32GtS:
+		return new(instruction.I32GtS), nil
+	case opcode.OpcodeI32GtU:
+		return new(instruction.I32GtU), nil
+	case opcode.OpcodeI32LeS:
+		return new(instruction.I32LeS), nil
+	case opcode.OpcodeI32LeU:
+		return new(instruction.I32LeU), nil
+	case opcode.OpcodeI32GeS:
+		return new(instruction.I32GeS), nil
+	case opcode.OpcodeI32GeU:
+		return new(instruction.I32GeU), nil
+	case opcode.OpcodeI64Eqz:
+		return new(instruction.I64Eqz), nil
+	case opcode.OpcodeI64Eq:
+		return new(instruction.I64Eq), nil
+	case opcode.OpcodeI64Ne:
+		return new(instruction.I64Ne), nil
+	case opcode.OpcodeI64LtS:
+		return new(instruction.I64LtS), nil
+	case opcode.OpcodeI64LtU:
+		return new(instruction.I64LtU), nil
+	case opcode.OpcodeI64GtS:
+		return new(instruction.I64GtS), nil
+	case opcode.OpcodeI64GtU:
+		return new(instruction.I64GtU), nil
+	case opcode.OpcodeI64LeS:
+		return new(instruction.I64LeS), nil
+	case opcode.OpcodeI64LeU:
+		return new(instruction.I64LeU), nil
+	case opcode.OpcodeI64GeS:
+		return new(instruction.I64GeS), nil
+	case opcode.OpcodeI64GeU:
+		return new(instruction.I64GeU), nil
+	case opcode.OpcodeF32Eq:
+		return new(instruction.F32Eq), nil
+	case opcode.OpcodeF32Ne:
+		return new(instruction.F32Ne), nil
+	case opcode.OpcodeF32Lt:
+		return new(instruction.F32Lt), nil
+	case opcode.OpcodeF32Gt:
+		return new(instruction.F32Gt), nil
+	case opcode.OpcodeF32Le:
+		return new(instruction.F32Le), nil
+	case opcode.OpcodeF32Ge:
+		return new(instruction.F32Ge), nil
+	case opcode.OpcodeF64Eq:
+		return new(instruction.F64Eq), nil
+	case opcode.OpcodeF64Ne:
+		return new(instruction.F64Ne), nil
+	case opcode.OpcodeF64Lt:
+		return new(instruction.F64Lt), nil
+	case opcode.OpcodeF64Gt:
+		return new(instruction.F64Gt), nil
+	case opcode.OpcodeF64Le:
+		return new(instruction.F64Le), nil
+	case opcode.OpcodeF64Ge:
+		return new(instruction.F64Ge), nil
 	case opcode.OpcodeI32Add:
 		return new(instruction.I32Add), nil
 	case opcode.OpcodeI32Sub:
