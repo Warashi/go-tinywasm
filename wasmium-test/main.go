@@ -109,9 +109,9 @@ func invoke(r *runtime.Runtime, a Action) ([]Result, error) {
 		case typesRuntime.ValueI64:
 			result = append(result, Result{Type: "i64", Value: strconv.FormatInt(int64(v), 10)})
 		case typesRuntime.ValueF32:
-			result = append(result, Result{Type: "f32", Value: strconv.FormatInt(int64(convert[uint32](v, 32)), 10)})
+			result = append(result, Result{Type: "f32", Value: strconv.FormatUint(uint64(convert[uint32](v, 32)), 10)})
 		case typesRuntime.ValueF64:
-			result = append(result, Result{Type: "f64", Value: strconv.FormatInt(int64(convert[uint64](v, 64)), 10)})
+			result = append(result, Result{Type: "f64", Value: strconv.FormatUint(convert[uint64](v, 64), 10)})
 		}
 	}
 
