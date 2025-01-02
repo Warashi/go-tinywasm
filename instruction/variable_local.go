@@ -1,6 +1,7 @@
 package instruction
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/Warashi/wasmium/leb128"
@@ -24,7 +25,7 @@ func (i *LocalGet) ReadOperandsFrom(r io.Reader) error {
 
 func (i *LocalGet) Execute(r runtime.Runtime, f *runtime.Frame) error {
 	if i.Index < 0 || len(f.Locals) <= int(i.Index) {
-		return runtime.ErrOutOfBounds
+		return fmt.Errorf("index out of bounds, index: %d, locals: %d: %w", i.Index, len(f.Locals), runtime.ErrOutOfBounds)
 	}
 
 	r.PushStack(f.Locals[i.Index])
@@ -48,7 +49,7 @@ func (i *LocalSet) ReadOperandsFrom(r io.Reader) error {
 
 func (i *LocalSet) Execute(r runtime.Runtime, f *runtime.Frame) error {
 	if i.Index < 0 || len(f.Locals) <= int(i.Index) {
-		return runtime.ErrOutOfBounds
+		return fmt.Errorf("index out of bounds, index: %d, locals: %d: %w", i.Index, len(f.Locals), runtime.ErrOutOfBounds)
 	}
 
 	value, err := r.PopStack()
