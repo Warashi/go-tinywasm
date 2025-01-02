@@ -25,6 +25,29 @@ func decodeBlock(r io.Reader) (binary.Block, error) {
 	}
 }
 
+func br(r runtime.Runtime, f *runtime.Frame, level uint32) (int, error) {
+	index := f.Labels.Len() - 1 - int(level)
+	label := f.Labels[index]
+
+	if label.Kind() == runtime.LabelKindLoop {
+		// NOTE: we still need loop label to jump to the beginning of the loop.
+		f.Labels.Drain(index + 1)
+
+		// NOTE: since it jumps to the beginning of the loop,
+		// the stack is unwound without considering the return value.
+		if err := r.StackUnwind(label.StackPointer(), 0); err != nil {
+			return 0, fmt.Errorf("failed to unwind stack: %w", err)
+		}
+
+		return label.Start(), nil
+	}
+	f.Labels.Drain(index)
+	if err := r.StackUnwind(label.StackPointer(), label.Arity()); err != nil {
+		return 0, fmt.Errorf("failed to unwind stack: %w", err)
+	}
+	return label.ProgramCounter(), nil
+}
+
 func getEndAddress(insts []runtime.Instruction, programCounter int) (int, error) {
 	depth := 0
 	for {
@@ -151,29 +174,6 @@ func (*End) Execute(r runtime.Runtime, f *runtime.Frame) error {
 		}
 	}
 	return nil
-}
-
-func br(r runtime.Runtime, f *runtime.Frame, level uint32) (int, error) {
-	index := f.Labels.Len() - 1 - int(level)
-	label := f.Labels[index]
-
-	if label.Kind() == runtime.LabelKindLoop {
-		// NOTE: we still need loop label to jump to the beginning of the loop.
-		f.Labels.Drain(index + 1)
-
-		// NOTE: since it jumps to the beginning of the loop,
-		// the stack is unwound without considering the return value.
-		if err := r.StackUnwind(label.StackPointer(), 0); err != nil {
-			return 0, fmt.Errorf("failed to unwind stack: %w", err)
-		}
-
-		return label.Start(), nil
-	}
-	f.Labels.Drain(index)
-	if err := r.StackUnwind(label.StackPointer(), label.Arity()); err != nil {
-		return 0, fmt.Errorf("failed to unwind stack: %w", err)
-	}
-	return label.ProgramCounter(), nil
 }
 
 type Br struct {
