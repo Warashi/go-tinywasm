@@ -50,6 +50,28 @@ func getEndAddress(insts []runtime.Instruction, programCounter int) (int, error)
 	}
 }
 
+type Block struct {
+	Block binary.Block
+}
+
+func (*Block) Opcode() opcode.Opcode { return opcode.OpcodeBlock }
+
+func (b *Block) ReadOperandsFrom(r io.Reader) error {
+	var err error
+	b.Block, err = decodeBlock(r)
+	return err
+}
+
+func (b *Block) Execute(r runtime.Runtime, f *runtime.Frame) error {
+	arity := b.Block.BlockType.ResultCount()
+	pc, err := getEndAddress(f.Instructions, f.ProgramCounter)
+	if err != nil {
+		return fmt.Errorf("failed to get end address: %w", err)
+	}
+	f.Labels.Push(runtime.NewLabel(runtime.LabelKindBlock, 0, pc, r.StackLen(), arity))
+	return nil
+}
+
 type Loop struct {
 	Block binary.Block
 }
