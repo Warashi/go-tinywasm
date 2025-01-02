@@ -15,6 +15,10 @@ type inst interface {
 
 func fromOpcode(op opcode.Opcode) (inst, error) {
 	switch op {
+	case opcode.OpcodeUnreachable:
+		return new(instruction.Unreachable), nil
+	case opcode.OpcodeNop:
+		return new(instruction.Nop), nil
 	case opcode.OpcodeBlock:
 		return new(instruction.Block), nil
 	case opcode.OpcodeLoop:

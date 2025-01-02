@@ -74,6 +74,26 @@ func getEndAddress(insts []runtime.Instruction, programCounter int) (int, error)
 	}
 }
 
+type Unreachable struct{}
+
+func (*Unreachable) Opcode() opcode.Opcode { return opcode.OpcodeUnreachable }
+
+func (*Unreachable) ReadOperandsFrom(io.Reader) error { return nil }
+
+func (*Unreachable) Execute(runtime.Runtime, *runtime.Frame) error {
+	return fmt.Errorf("unreachable")
+}
+
+type Nop struct{}
+
+func (*Nop) Opcode() opcode.Opcode { return opcode.OpcodeNop }
+
+func (*Nop) ReadOperandsFrom(io.Reader) error { return nil }
+
+func (*Nop) Execute(runtime.Runtime, *runtime.Frame) error {
+	return nil
+}
+
 type Block struct {
 	Block binary.Block
 }
