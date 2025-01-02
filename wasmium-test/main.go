@@ -107,7 +107,7 @@ func invoke(r *runtime.Runtime, a Action) ([]Result, error) {
 	return result, nil
 }
 
-func _main() int {
+func _main() (exitCode int) {
 	var prof bool
 	flag.BoolVar(&prof, "prof", false, "record cpuprofile with profile.out")
 	flag.Parse()
@@ -147,7 +147,15 @@ func _main() int {
 
 	var r *runtime.Runtime
 
+	var current Commands
+	defer func() {
+		if r := recover(); r != nil {
+			slog.Error("panic", slog.Any("command", current), slog.Any("recover", r))
+			exitCode = 1
+		}
+	}()
 	for _, cmd := range wast.Commands {
+		current = cmd
 		switch cmd.Type {
 		case "module":
 			f, err := os.Open(filepath.Join(baseDir, cmd.Filename))
