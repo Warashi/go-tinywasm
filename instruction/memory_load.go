@@ -11,8 +11,8 @@ import (
 )
 
 type I32Load struct {
-	align  uint32
-	offset uint32
+	Align  uint32
+	Offset uint32
 }
 
 func (i *I32Load) Opcode() opcode.Opcode {
@@ -21,12 +21,12 @@ func (i *I32Load) Opcode() opcode.Opcode {
 
 func (i *I32Load) ReadOperandsFrom(r io.Reader) error {
 	var err error
-	i.align, err = leb128.Uint32(r)
+	i.Align, err = leb128.Uint32(r)
 	if err != nil {
 		return fmt.Errorf("failed to read align: %w", err)
 	}
 
-	i.offset, err = leb128.Uint32(r)
+	i.Offset, err = leb128.Uint32(r)
 	if err != nil {
 		return fmt.Errorf("failed to read offset: %w", err)
 	}
@@ -46,7 +46,7 @@ func (i *I32Load) Execute(r runtime.Runtime, f *runtime.Frame) error {
 	}
 
 	var buf [4]byte
-	if n, err := r.ReadMemoryAt(0, buf[:], int64(uint32(a)+i.offset)); err != nil || n != len(buf) {
+	if n, err := r.ReadMemoryAt(0, buf[:], int64(uint32(a)+i.Offset)); err != nil || n != len(buf) {
 		return fmt.Errorf("failed to read memory(%d): %w", n, err)
 	}
 
@@ -61,8 +61,8 @@ func (i *I32Load) Execute(r runtime.Runtime, f *runtime.Frame) error {
 }
 
 type I32Load8U struct {
-	align  uint32
-	offset uint32
+	Align  uint32
+	Offset uint32
 }
 
 func (i *I32Load8U) Opcode() opcode.Opcode {
@@ -71,12 +71,12 @@ func (i *I32Load8U) Opcode() opcode.Opcode {
 
 func (i *I32Load8U) ReadOperandsFrom(r io.Reader) error {
 	var err error
-	i.align, err = leb128.Uint32(r)
+	i.Align, err = leb128.Uint32(r)
 	if err != nil {
 		return fmt.Errorf("failed to read align: %w", err)
 	}
 
-	i.offset, err = leb128.Uint32(r)
+	i.Offset, err = leb128.Uint32(r)
 	if err != nil {
 		return fmt.Errorf("failed to read offset: %w", err)
 	}
@@ -96,7 +96,7 @@ func (i *I32Load8U) Execute(r runtime.Runtime, f *runtime.Frame) error {
 	}
 
 	var buf [1]byte
-	if n, err := r.ReadMemoryAt(0, buf[:], int64(uint32(a)+i.offset)); err != nil || n != len(buf) {
+	if n, err := r.ReadMemoryAt(0, buf[:], int64(uint32(a)+i.Offset)); err != nil || n != len(buf) {
 		return fmt.Errorf("failed to read memory(%d): %w", n, err)
 	}
 

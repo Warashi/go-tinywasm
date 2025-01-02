@@ -11,8 +11,8 @@ import (
 )
 
 type I32Store struct {
-	align  uint32
-	offset uint32
+	Align  uint32
+	Offset uint32
 }
 
 func (i *I32Store) Opcode() opcode.Opcode {
@@ -21,11 +21,11 @@ func (i *I32Store) Opcode() opcode.Opcode {
 
 func (i *I32Store) ReadOperandsFrom(r io.Reader) error {
 	var err error
-	i.align, err = leb128.Uint32(r)
+	i.Align, err = leb128.Uint32(r)
 	if err != nil {
 		return err
 	}
-	i.offset, err = leb128.Uint32(r)
+	i.Offset, err = leb128.Uint32(r)
 	return err
 }
 
@@ -55,17 +55,16 @@ func (i *I32Store) Execute(r runtime.Runtime, f *runtime.Frame) error {
 		return fmt.Errorf("failed to encode value: %w", err)
 	}
 
-	if n, err := r.WriteMemoryAt(0, buf[:], int64(uint32(a)+i.offset)); err != nil || n != len(buf) {
+	if n, err := r.WriteMemoryAt(0, buf[:], int64(uint32(a)+i.Offset)); err != nil || n != len(buf) {
 		return fmt.Errorf("failed to write memory(%d): %w", n, err)
 	}
 
 	return nil
 }
 
-// TODO: implement the rest of the store instructions
 type I32Store8 struct {
-	align  uint32
-	offset uint32
+	Align  uint32
+	Offset uint32
 }
 
 func (i *I32Store8) Opcode() opcode.Opcode {
@@ -74,11 +73,11 @@ func (i *I32Store8) Opcode() opcode.Opcode {
 
 func (i *I32Store8) ReadOperandsFrom(r io.Reader) error {
 	var err error
-	i.align, err = leb128.Uint32(r)
+	i.Align, err = leb128.Uint32(r)
 	if err != nil {
 		return err
 	}
-	i.offset, err = leb128.Uint32(r)
+	i.Offset, err = leb128.Uint32(r)
 	return err
 }
 
@@ -108,9 +107,11 @@ func (i *I32Store8) Execute(r runtime.Runtime, f *runtime.Frame) error {
 		return fmt.Errorf("failed to encode value: %w", err)
 	}
 
-	if n, err := r.WriteMemoryAt(0, buf[:], int64(uint32(a)+i.offset)); err != nil || n != len(buf) {
+	if n, err := r.WriteMemoryAt(0, buf[:], int64(uint32(a)+i.Offset)); err != nil || n != len(buf) {
 		return fmt.Errorf("failed to write memory(%d): %w", n, err)
 	}
 
 	return nil
 }
+
+// TODO: implement the rest of the store instructions
