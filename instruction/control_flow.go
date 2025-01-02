@@ -193,6 +193,77 @@ func (b *Br) Execute(r runtime.Runtime, f *runtime.Frame) error {
 	return err
 }
 
+type BrIf struct {
+	Level uint32
+}
+
+func (*BrIf) Opcode() opcode.Opcode { return opcode.OpcodeBrIf }
+
+func (b *BrIf) ReadOperandsFrom(r io.Reader) error {
+	var err error
+	b.Level, err = leb128.Uint32(r)
+	return err
+}
+
+func (b *BrIf) Execute(r runtime.Runtime, f *runtime.Frame) error {
+	cond, err := r.PopStack()
+	if err != nil {
+		return fmt.Errorf("failed to pop stack: %w", err)
+	}
+
+	if !cond.Bool() {
+		return nil
+	}
+
+	f.ProgramCounter, err = br(r, f, b.Level)
+	return err
+}
+
+type BrTable struct {
+	Levels  []uint32
+	Default uint32
+}
+
+func (*BrTable) Opcode() opcode.Opcode { return opcode.OpcodeBrTable }
+
+func (b *BrTable) ReadOperandsFrom(r io.Reader) error {
+	var err error
+	count, err := leb128.Uint32(r)
+	if err != nil {
+		return fmt.Errorf("failed to read count: %w", err)
+	}
+
+	b.Levels = make([]uint32, 0, count)
+	for range count {
+		level, err := leb128.Uint32(r)
+		if err != nil {
+			return fmt.Errorf("failed to read level: %w", err)
+		}
+		b.Levels = append(b.Levels, level)
+	}
+
+	b.Default, err = leb128.Uint32(r)
+	return err
+}
+
+func (b *BrTable) Execute(r runtime.Runtime, f *runtime.Frame) error {
+	cond, err := r.PopStack()
+	if err != nil {
+		return fmt.Errorf("failed to pop stack: %w", err)
+	}
+
+	var level uint32
+	index := cond.Int()
+	if index < 0 || len(b.Levels) <= index {
+		level = b.Default
+	} else {
+		level = b.Levels[index]
+	}
+
+	f.ProgramCounter, err = br(r, f, level)
+	return err
+}
+
 type Return struct{}
 
 func (*Return) Opcode() opcode.Opcode { return opcode.OpcodeReturn }
