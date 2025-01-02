@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -52,6 +53,16 @@ func action(r *runtime.Runtime, a Action) ([]Result, error) {
 	return nil, fmt.Errorf("unsupported action type %s", a.Type)
 }
 
+// convert converts from F to T with same binary representation.
+func convert[T, F any](f F, bit int) T {
+	buf := make([]byte, bit/8)
+	binary.Encode(buf, binary.LittleEndian, f)
+
+	var t T
+	binary.Decode(buf, binary.LittleEndian, &t)
+	return t
+}
+
 func invoke(r *runtime.Runtime, a Action) ([]Result, error) {
 	field := a.Field
 	args := make([]typesRuntime.Value, len(a.Args))
@@ -98,9 +109,9 @@ func invoke(r *runtime.Runtime, a Action) ([]Result, error) {
 		case typesRuntime.ValueI64:
 			result = append(result, Result{Type: "i64", Value: strconv.FormatInt(int64(v), 10)})
 		case typesRuntime.ValueF32:
-			result = append(result, Result{Type: "f32", Value: strconv.FormatFloat(float64(v), 'f', -1, 32)})
+			result = append(result, Result{Type: "f32", Value: strconv.FormatInt(int64(convert[uint32](v, 32)), 10)})
 		case typesRuntime.ValueF64:
-			result = append(result, Result{Type: "f64", Value: strconv.FormatFloat(float64(v), 'f', -1, 64)})
+			result = append(result, Result{Type: "f64", Value: strconv.FormatInt(int64(convert[uint64](v, 64)), 10)})
 		}
 	}
 
