@@ -188,7 +188,10 @@ func (r *Runtime) StackUnwind(stackPointer int, arity int) error {
 func (r *Runtime) InvokeInternal(f runtime.InternalFuncInst) ([]runtime.Value, error) {
 	arity := len(f.FuncType.Results)
 
-	r.PushFrame(f)
+	if err := r.PushFrame(f); err != nil {
+		r.Cleanup()
+		return nil, fmt.Errorf("failed to push frame: %w", err)
+	}
 
 	if err := r.execute(); err != nil {
 		r.Cleanup()
@@ -241,6 +244,10 @@ func (r *Runtime) PushFrame(f runtime.InternalFuncInst) error {
 			locals.Push(runtime.ValueI32(0))
 		case binary.ValueTypeI64:
 			locals.Push(runtime.ValueI64(0))
+		case binary.ValueTypeF32:
+			locals.Push(runtime.ValueF32(0))
+		case binary.ValueTypeF64:
+			locals.Push(runtime.ValueF64(0))
 		}
 	}
 
