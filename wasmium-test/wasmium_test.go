@@ -133,7 +133,7 @@ type Commands struct {
 }
 
 func (c Commands) TestName() string {
-	return fmt.Sprintf("%s:%d(%s:%s)", c.Filename, c.Line, c.Type, c.Action)
+	return fmt.Sprintf("%d(%s:%s)", c.Line, c.Type, c.Action)
 }
 
 type Expected = Value
