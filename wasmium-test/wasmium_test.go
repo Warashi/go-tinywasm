@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"strconv"
 	"testing"
+	"unsafe"
 
 	"github.com/Warashi/wasmium/runtime"
 	typesRuntime "github.com/Warashi/wasmium/types/runtime"
@@ -56,26 +57,34 @@ func (a Value) f32() float32 {
 	var s string
 	json.Unmarshal(a.Value, &s)
 	v, _ := strconv.ParseUint(s, 10, 32)
-	return convert[float32](v, 32)
+	return convert[float32](v)
 }
 
 func (a Value) f64() float64 {
 	var s string
 	json.Unmarshal(a.Value, &s)
 	v, _ := strconv.ParseUint(s, 10, 64)
-	return convert[float64](v, 64)
+	return convert[float64](v)
 }
 
 func (a Value) String() string {
 	switch a.Type {
 	case "i32":
-		return strconv.FormatInt(int64(a.i32()), 10)
+		var buf [4]byte
+		binary.Encode(buf[:], binary.LittleEndian, a.i32())
+		return fmt.Sprintf("%s(0x%x)", a.Type, buf)
 	case "i64":
-		return strconv.FormatInt(a.i64(), 10)
+		var buf [8]byte
+		binary.Encode(buf[:], binary.LittleEndian, a.i64())
+		return fmt.Sprintf("%s(0x%x)", a.Type, buf)
 	case "f32":
-		return strconv.FormatFloat(float64(a.f32()), 'f', -1, 32)
+		var buf [4]byte
+		binary.Encode(buf[:], binary.LittleEndian, a.i32())
+		return fmt.Sprintf("%s(0x%x)", a.Type, buf)
 	case "f64":
-		return strconv.FormatFloat(a.f64(), 'f', -1, 64)
+		var buf [8]byte
+		binary.Encode(buf[:], binary.LittleEndian, a.i64())
+		return fmt.Sprintf("%s(0x%x)", a.Type, buf)
 	}
 	panic(fmt.Sprintf("unsupported value type %s", a.Type))
 }
@@ -95,9 +104,9 @@ func NewValue(v typesRuntime.Value) Value {
 	case typesRuntime.ValueI64:
 		return Value{Type: "i64", Value: mustMarshalJSON(strconv.FormatInt(int64(v), 10))}
 	case typesRuntime.ValueF32:
-		return Value{Type: "f32", Value: mustMarshalJSON(strconv.FormatUint(uint64(convert[uint32](v, 32)), 10))}
+		return Value{Type: "f32", Value: mustMarshalJSON(strconv.FormatUint(uint64(convert[uint32](v)), 10))}
 	case typesRuntime.ValueF64:
-		return Value{Type: "f64", Value: mustMarshalJSON(strconv.FormatUint(convert[uint64](v, 64), 10))}
+		return Value{Type: "f64", Value: mustMarshalJSON(strconv.FormatUint(convert[uint64](v), 10))}
 	default:
 		panic(fmt.Sprintf("unsupported value type %T", v))
 	}
@@ -139,13 +148,12 @@ func action(r *runtime.Runtime, a Action) ([]Result, error) {
 }
 
 // convert converts from F to T with same binary representation.
-func convert[T, F any](f F, bit int) T {
-	buf := make([]byte, bit/8)
-	binary.Encode(buf, binary.LittleEndian, f)
-
+func convert[T, F any](f F) T {
 	var t T
-	binary.Decode(buf, binary.LittleEndian, &t)
-	return t
+	if unsafe.Sizeof(f) != unsafe.Sizeof(t) {
+		panic(fmt.Sprintf("size mismatch: %d != %d", unsafe.Sizeof(f), unsafe.Sizeof(t)))
+	}
+	return *(*T)(unsafe.Pointer(&f))
 }
 
 func invoke(r *runtime.Runtime, a Action) ([]Result, error) {
