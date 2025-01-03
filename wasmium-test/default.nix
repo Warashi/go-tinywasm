@@ -16,7 +16,7 @@ in
 pkgs.writeShellApplication {
   name = "wasmium-test";
   text = ''
-    echo "Running tests"
+    export WASMIUM_TEST_DIR="${testsuite-json}"
     for f in ${testsuite-json}/*.json; do
       echo "Running $f"
       ${wasmium-test}/bin/wasmium-test "$f"

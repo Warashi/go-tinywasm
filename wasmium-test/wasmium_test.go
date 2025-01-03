@@ -1,16 +1,15 @@
-package main
+package wasmium_test
 
 import (
+	"cmp"
 	"encoding/binary"
 	"encoding/json"
-	"flag"
 	"fmt"
-	"log/slog"
 	"os"
 	"path/filepath"
 	"reflect"
-	"runtime/pprof"
 	"strconv"
+	"testing"
 
 	"github.com/Warashi/wasmium/runtime"
 	typesRuntime "github.com/Warashi/wasmium/types/runtime"
@@ -118,83 +117,78 @@ func invoke(r *runtime.Runtime, a Action) ([]Result, error) {
 	return result, nil
 }
 
-func _main() (exitCode int) {
-	var prof bool
-	flag.BoolVar(&prof, "prof", false, "record cpuprofile with profile.out")
-	flag.Parse()
+func filepathWalk(t *testing.T, basedir string) func(func(string) bool) {
+	t.Helper()
 
-	baseDir := filepath.Dir(flag.Arg(0))
-
-	if prof {
-		f, err := os.Create("profile.out")
-		if err != nil {
-			slog.Error("failed to create profile.out", slog.Any("error", err))
-			return 1
-		}
-		defer func() {
-			if err := f.Close(); err != nil {
-				slog.Error("failed to close profile.out", slog.Any("error", err))
+	return func(yield func(string) bool) {
+		filepath.Walk(basedir, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				t.Fatalf("failed to walk %s: %v", path, err)
+				return err
 			}
-		}()
-		if err := pprof.StartCPUProfile(f); err != nil {
-			slog.Error("failed to start cpuprofile", slog.Any("error", err))
-			return 1
-		}
-		defer pprof.StopCPUProfile()
-	}
+			if info.IsDir() {
+				return nil
+			}
 
-	f, err := os.Open(flag.Arg(0))
+			if !yield(path) {
+				return filepath.SkipAll
+			}
+			return nil
+		})
+	}
+}
+
+func setup(t *testing.T, p string) JSONWast {
+	t.Helper()
+
+	f, err := os.Open(p)
 	if err != nil {
-		slog.Error("failed to open file", slog.Any("error", err))
-		return 1
+		t.Fatalf("failed to open file %s: %v", p, err)
 	}
 	defer f.Close()
 
 	var wast JSONWast
 	if err := json.NewDecoder(f).Decode(&wast); err != nil {
-		slog.Error("failed to decode json", slog.Any("error", err))
-		return 1
+		t.Fatalf("failed to decode json: %v", err)
 	}
 
-	var r *runtime.Runtime
-
-	var current Commands
-	defer func() {
-		if r := recover(); r != nil {
-			slog.Error("panic", slog.Any("command", current), slog.Any("recover", r))
-			exitCode = 1
-		}
-	}()
-	for _, cmd := range wast.Commands {
-		current = cmd
-		switch cmd.Type {
-		case "module":
-			f, err := os.Open(filepath.Join(baseDir, cmd.Filename))
-			if err != nil {
-				slog.Error("failed to open file", slog.Any("error", err))
-				return 1
-			}
-			r, err = runtime.New(f)
-			if err != nil {
-				slog.Error("failed to create runtime", slog.Any("error", err))
-				return 1
-			}
-		case "assert_return":
-			got, err := action(r, cmd.Action)
-			if err != nil {
-				slog.Warn("failed to execute action", slog.Any("command", cmd), slog.Any("error", err))
-				continue
-			}
-			if !reflect.DeepEqual(cmd.Expected, got) {
-				slog.Warn("assertion failed", slog.Any("command", cmd), slog.Any("expected", cmd.Expected), slog.Any("got", got))
-			}
-		}
-
-	}
-
-	return 0
+	return wast
 }
 
-func main() {
-	os.Exit(_main())
+func TestWasmium(t *testing.T) {
+	baseDir := cmp.Or(os.Getenv("WASMIUM_TEST_DIR"), ".")
+
+	for p := range filepathWalk(t, baseDir) {
+		if filepath.Ext(p) != ".json" {
+			continue
+		}
+
+		t.Run(p, func(t *testing.T) {
+			wast := setup(t, p)
+
+			var r *runtime.Runtime
+
+			for _, cmd := range wast.Commands {
+				switch cmd.Type {
+				case "module":
+					f, err := os.Open(filepath.Join(baseDir, cmd.Filename))
+					if err != nil {
+						t.Fatalf("failed to open file %s: %v", cmd.Filename, err)
+					}
+					r, err = runtime.New(f)
+					if err != nil {
+						t.Fatalf("failed to create runtime: %v", err)
+					}
+				case "assert_return":
+					got, err := action(r, cmd.Action)
+					if err != nil {
+						t.Errorf("failed to execute action: %v", err)
+					}
+					if !reflect.DeepEqual(cmd.Expected, got) {
+						t.Errorf("assertion failed: expected %v, got %v", cmd.Expected, got)
+					}
+				}
+			}
+		})
+	}
 }

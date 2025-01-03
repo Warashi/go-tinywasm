@@ -22,24 +22,26 @@
         pkgs = import nixpkgs {
           inherit system overlays;
         };
+        testsuite-json = pkgs.runCommand "json-testsuite" { } ''
+          mkdir -p $out
+          for f in ${wasm-spec}/test/core/*.wast; do
+            echo "Converting $f to json"
+            ${pkgs.wabt}/bin/wast2json $f -o "$out/$(basename $f).json"
+          done
+        '';
       in
       {
         devShells.default =
           with pkgs;
           mkShell {
             GOTOOLCHAIN = "local";
+            WASMIUM_TEST_DIR = testsuite-json;
             buildInputs = [
               go
               gotools
               wabt
             ];
           };
-        packages = rec {
-          wasmium-test = pkgs.callPackage ./wasmium-test.nix { };
-          test = import ./wasmium-test {
-            inherit pkgs wasm-spec wasmium-test;
-          };
-        };
       }
     );
 }
