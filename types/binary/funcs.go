@@ -60,7 +60,17 @@ type Memory struct {
 	Limits Limits
 }
 
+//go:generate stringer -type=DataMode
+type DataMode int
+
+const (
+	_ DataMode = iota
+	DataModeActive
+	DataModePassive
+)
+
 type Data struct {
+	Mode        DataMode
 	MemoryIndex uint32
 	Offset      Expr
 	Init        []byte

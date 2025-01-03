@@ -559,27 +559,56 @@ func decodeDataSection(r io.Reader) ([]binary.Data, error) {
 	data := make([]binary.Data, 0, count)
 
 	for range count {
-		memoryIndex, err := leb128.Uint32(r)
+		typ, err := leb128.Uint32(r)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read memory index: %w", err)
+			return nil, fmt.Errorf("failed to read data type: %w", err)
 		}
-		offset, err := decodeExpr(r)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read offset: %w", err)
+		switch typ {
+		case 0:
+			offset, err := decodeExpr(r)
+			if err != nil {
+				return nil, fmt.Errorf("failed to decode data offset: %w", err)
+			}
+			size, err := leb128.Uint32(r)
+			if err != nil {
+				return nil, fmt.Errorf("failed to read data size: %w", err)
+			}
+			init := make([]byte, size)
+			if _, err := io.ReadFull(r, init); err != nil {
+				return nil, fmt.Errorf("failed to read data init: %w", err)
+			}
+			data = append(data, binary.Data{Mode: binary.DataModeActive, MemoryIndex: 0, Offset: offset, Init: init})
+		case 1:
+			size, err := leb128.Uint32(r)
+			if err != nil {
+				return nil, fmt.Errorf("failed to read data size: %w", err)
+			}
+			init := make([]byte, size)
+			if _, err := io.ReadFull(r, init); err != nil {
+				return nil, fmt.Errorf("failed to read data init: %w", err)
+			}
+			data = append(data, binary.Data{Mode: binary.DataModePassive, Init: init})
+		case 2:
+			memoryIndex, err := leb128.Uint32(r)
+			if err != nil {
+				return nil, fmt.Errorf("failed to read memory index: %w", err)
+			}
+			offset, err := decodeExpr(r)
+			if err != nil {
+				return nil, fmt.Errorf("failed to decode data offset: %w", err)
+			}
+			size, err := leb128.Uint32(r)
+			if err != nil {
+				return nil, fmt.Errorf("failed to read data size: %w", err)
+			}
+			init := make([]byte, size)
+			if _, err := io.ReadFull(r, init); err != nil {
+				return nil, fmt.Errorf("failed to read data init: %w", err)
+			}
+			data = append(data, binary.Data{Mode: binary.DataModeActive, MemoryIndex: memoryIndex, Offset: offset, Init: init})
+		default:
+			return nil, fmt.Errorf("unsupported data type: %d", typ)
 		}
-		size, err := leb128.Uint32(r)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read data size: %w", err)
-		}
-		rest, err := take(size)(r)
-		if err != nil {
-			return nil, fmt.Errorf("failed to take data: %w", err)
-		}
-		init, err := io.ReadAll(rest)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read data: %w", err)
-		}
-		data = append(data, binary.Data{MemoryIndex: memoryIndex, Offset: offset, Init: init})
 	}
 
 	return data, nil
