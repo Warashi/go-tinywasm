@@ -246,6 +246,13 @@ func TestWasmium(t *testing.T) {
 						if err != nil {
 							t.Fatalf("failed to create runtime: %v", err)
 						}
+					case "action":
+						if r == nil {
+							t.Skip("module loading failed")
+						}
+						if _, err := action(r, cmd.Action); err != nil {
+							t.Errorf("failed to execute action: %v", err)
+						}
 					case "assert_return":
 						if r == nil {
 							t.Skip("module loading failed")
