@@ -28,25 +28,25 @@ func (i *FCPrefix) ReadOperandsFrom(r io.Reader) error {
 		return fmt.Errorf("failed to read byte: %w", err)
 	}
 
-	switch b {
-	case 0x00:
+	switch b := opcode.OpcodeFC(b); b {
+	case opcode.OpcodeFCI32TruncSatF32S:
 		i.FC = new(FCI32TruncSatF32S)
-	case 0x01:
+	case opcode.OpcodeFCI32TruncSatF32U:
 		i.FC = new(FCI32TruncSatF32U)
-	case 0x02:
+	case opcode.OpcodeFCI32TruncSatF64S:
 		i.FC = new(FCI32TruncSatF64S)
-	case 0x03:
+	case opcode.OpcodeFCI32TruncSatF64U:
 		i.FC = new(FCI32TruncSatF64U)
-	case 0x04:
+	case opcode.OpcodeFCI64TruncSatF32S:
 		i.FC = new(FCI64TruncSatF32S)
-	case 0x05:
+	case opcode.OpcodeFCI64TruncSatF32U:
 		i.FC = new(FCI64TruncSatF32U)
-	case 0x06:
+	case opcode.OpcodeFCI64TruncSatF64S:
 		i.FC = new(FCI64TruncSatF64S)
-	case 0x07:
+	case opcode.OpcodeFCI64TruncSatF64U:
 		i.FC = new(FCI64TruncSatF64U)
 	default:
-		return fmt.Errorf("invalid FC opcode: %v", b)
+		return fmt.Errorf("unknown FC opcode: %v", b)
 	}
 
 	return i.FC.ReadOperandsFrom(r)
