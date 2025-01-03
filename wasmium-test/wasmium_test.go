@@ -174,7 +174,7 @@ func TestWasmium(t *testing.T) {
 			continue
 		}
 
-		t.Run(p, func(t *testing.T) {
+		t.Run(filepath.Base(p), func(t *testing.T) {
 			t.Parallel()
 
 			wast := setup(t, p)
