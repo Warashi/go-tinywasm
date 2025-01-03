@@ -234,6 +234,11 @@ func TestWasmium(t *testing.T) {
 
 			for _, cmd := range wast.Commands {
 				t.Run(cmd.TestName(), func(t *testing.T) {
+					defer func() {
+						if err := recover(); err != nil {
+							t.Fatalf("panic: %v", err)
+						}
+					}()
 					switch cmd.Type {
 					case "module":
 						f, err := os.Open(filepath.Join(baseDir, cmd.Filename))
