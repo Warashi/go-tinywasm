@@ -278,7 +278,7 @@ const (
 )
 
 //go:generate stringer -type=OpcodeFC
-type OpcodeFC byte
+type OpcodeFC uint32
 
 const (
 	OpcodeFCI32TruncSatF32S OpcodeFC = iota
