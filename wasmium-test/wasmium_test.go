@@ -53,18 +53,18 @@ func (a Value) i64() int64 {
 	return v
 }
 
-func (a Value) f32() float32 {
+func (a Value) f32() [4]byte {
 	var s string
 	json.Unmarshal(a.Value, &s)
 	v, _ := strconv.ParseUint(s, 10, 32)
-	return convert[float32](v)
+	return convert[[4]byte](uint32(v))
 }
 
-func (a Value) f64() float64 {
+func (a Value) f64() [8]byte {
 	var s string
 	json.Unmarshal(a.Value, &s)
 	v, _ := strconv.ParseUint(s, 10, 64)
-	return convert[float64](v)
+	return convert[[8]byte](v)
 }
 
 func (a Value) String() string {

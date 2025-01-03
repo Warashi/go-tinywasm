@@ -245,9 +245,9 @@ func (r *Runtime) PushFrame(f runtime.InternalFuncInst) error {
 		case binary.ValueTypeI64:
 			locals.Push(runtime.ValueI64(0))
 		case binary.ValueTypeF32:
-			locals.Push(runtime.ValueF32(0))
+			locals.Push(runtime.ValueF32{})
 		case binary.ValueTypeF64:
-			locals.Push(runtime.ValueF64(0))
+			locals.Push(runtime.ValueF64{})
 		}
 	}
 

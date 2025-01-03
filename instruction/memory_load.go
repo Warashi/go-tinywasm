@@ -652,12 +652,7 @@ func (i *F32Load) Execute(r runtime.Runtime, f *runtime.Frame) error {
 		return fmt.Errorf("failed to read memory(%d): %w", n, err)
 	}
 
-	var result float32
-	if _, err := binary.Decode(buf[:], binary.LittleEndian, &result); err != nil {
-		return fmt.Errorf("failed to decode value: %w", err)
-	}
-
-	r.PushStack(runtime.ValueF32(result))
+	r.PushStack(runtime.ValueF32(buf))
 
 	return nil
 }
@@ -702,12 +697,7 @@ func (i *F64Load) Execute(r runtime.Runtime, f *runtime.Frame) error {
 		return fmt.Errorf("failed to read memory(%d): %w", n, err)
 	}
 
-	var result float64
-	if _, err := binary.Decode(buf[:], binary.LittleEndian, &result); err != nil {
-		return fmt.Errorf("failed to decode value: %w", err)
-	}
-
-	r.PushStack(runtime.ValueF64(result))
+	r.PushStack(runtime.ValueF64(buf))
 
 	return nil
 }

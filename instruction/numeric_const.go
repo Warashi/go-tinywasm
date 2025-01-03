@@ -47,7 +47,7 @@ func (i *I64Const) Execute(r runtime.Runtime, f *runtime.Frame) error {
 }
 
 type F32Const struct {
-	Value float32
+	Value [4]byte
 }
 
 func (i *F32Const) Opcode() opcode.Opcode {
@@ -66,7 +66,7 @@ func (i *F32Const) Execute(r runtime.Runtime, f *runtime.Frame) error {
 }
 
 type F64Const struct {
-	Value float64
+	Value [8]byte
 }
 
 func (i *F64Const) Opcode() opcode.Opcode {

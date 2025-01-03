@@ -291,8 +291,12 @@ func (b *BrTable) Execute(r runtime.Runtime, f *runtime.Frame) error {
 	}
 
 	var level uint32
-	index := cond.Int()
-	if index < 0 || len(b.Levels) <= index {
+	index, ok := cond.(runtime.ValueI32)
+	if !ok {
+		return fmt.Errorf("invalid value(%T): %w", cond, runtime.ErrInvalidValue)
+	}
+
+	if index < 0 || len(b.Levels) <= int(index) {
 		level = b.Default
 	} else {
 		level = b.Levels[index]

@@ -33,30 +33,19 @@ func readByte(r io.Reader) (byte, error) {
 	return b[0], nil
 }
 
-func readF32(r io.Reader) (float32, error) {
+func readF32(r io.Reader) ([4]byte, error) {
 	var b [4]byte
 	if _, err := io.ReadFull(r, b[:]); err != nil {
-		return 0, err
+		return b, err
 	}
-
-	var f float32
-	if _, err := binary.Decode(b[:], endian, &f); err != nil {
-		return 0, err
-	}
-
-	return f, nil
+	return b, nil
 }
 
-func readF64(r io.Reader) (float64, error) {
+func readF64(r io.Reader) ([8]byte, error) {
 	var b [8]byte
 	if _, err := io.ReadFull(r, b[:]); err != nil {
-		return 0, err
+		return b, err
 	}
 
-	var f float64
-	if _, err := binary.Decode(b[:], endian, &f); err != nil {
-		return 0, err
-	}
-
-	return f, nil
+	return b, nil
 }

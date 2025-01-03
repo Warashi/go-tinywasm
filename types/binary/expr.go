@@ -11,27 +11,27 @@ type ExprValue interface {
 
 type ExprValueConstI32 int32
 
-func (e ExprValueConstI32) isExpr()      {}
-func (e ExprValueConstI32) isExprValue() {}
-func (e ExprValueConstI32) Int() int     { return int(e) }
+func (ExprValueConstI32) isExpr()      {}
+func (ExprValueConstI32) isExprValue() {}
+func (e ExprValueConstI32) Int() int   { return int(e) }
 
 type ExprValueConstI64 int64
 
-func (e ExprValueConstI64) isExpr()      {}
-func (e ExprValueConstI64) isExprValue() {}
-func (e ExprValueConstI64) Int() int     { return int(e) }
+func (ExprValueConstI64) isExpr()      {}
+func (ExprValueConstI64) isExprValue() {}
+func (e ExprValueConstI64) Int() int   { return int(e) }
 
-type ExprValueConstF32 float32
+type ExprValueConstF32 [4]byte
 
-func (e ExprValueConstF32) isExpr()      {}
-func (e ExprValueConstF32) isExprValue() {}
-func (e ExprValueConstF32) Int() int     { return int(e) }
+func (ExprValueConstF32) isExpr()      {}
+func (ExprValueConstF32) isExprValue() {}
+func (ExprValueConstF32) Int() int     { panic("int for f32 is not allowed") }
 
-type ExprValueConstF64 float64
+type ExprValueConstF64 [8]byte
 
-func (e ExprValueConstF64) isExpr()      {}
-func (e ExprValueConstF64) isExprValue() {}
-func (e ExprValueConstF64) Int() int     { return int(e) }
+func (ExprValueConstF64) isExpr()      {}
+func (ExprValueConstF64) isExprValue() {}
+func (e ExprValueConstF64) Int() int   { panic("int for f64 is not allowed") }
 
 type ExprGlobalIndex uint32
 

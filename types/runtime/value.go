@@ -45,6 +45,7 @@ func ValueFrom(v any) (Value, error) {
 }
 
 type Value interface {
+	isValue()
 	Type() ValueType
 	Int() int
 	Bool() bool
@@ -52,27 +53,41 @@ type Value interface {
 
 type ValueI32 int32
 
+func (ValueI32) isValue()        {}
 func (ValueI32) Type() ValueType { return ValueTypeI32 }
 func (v ValueI32) Int() int      { return int(v) }
 func (v ValueI32) Bool() bool    { return v != 0 }
 
 type ValueI64 int64
 
+func (ValueI64) isValue()        {}
 func (ValueI64) Type() ValueType { return ValueTypeI64 }
 func (v ValueI64) Int() int      { return int(v) }
 func (v ValueI64) Bool() bool    { return v != 0 }
 
-type ValueF32 float32
+type ValueF32 [4]byte
 
+func (ValueF32) isValue()        {}
 func (ValueF32) Type() ValueType { return ValueTypeF32 }
-func (v ValueF32) Int() int      { return int(v) }
-func (v ValueF32) Bool() bool    { return v != 0 }
+func (ValueF32) Int() int        { panic("int for f32 is not allowed") }
+func (ValueF32) Bool() bool      { panic("bool for f32 is not allowed") }
+func (v ValueF32) Float32() float32 {
+	var f float32
+	binary.Decode(v[:], binary.LittleEndian, &f)
+	return f
+}
 
-type ValueF64 float64
+type ValueF64 [8]byte
 
+func (ValueF64) isValue()        {}
 func (ValueF64) Type() ValueType { return ValueTypeF64 }
-func (v ValueF64) Int() int      { return int(v) }
-func (v ValueF64) Bool() bool    { return v != 0 }
+func (ValueF64) Int() int        { panic("int for f64 is not allowed") }
+func (ValueF64) Bool() bool      { panic("bool for f64 is not allowed") }
+func (v ValueF64) Float64() float64 {
+	var f float64
+	binary.Decode(v[:], binary.LittleEndian, &f)
+	return f
+}
 
 type LabelKind int
 

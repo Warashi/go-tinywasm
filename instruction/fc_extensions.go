@@ -69,14 +69,16 @@ func (*FCI32TruncSatF32S) Execute(r runtime.Runtime, f *runtime.Frame) error {
 		return runtime.ErrInvalidValue
 	}
 
-	if math.IsNaN(float64(f32)) {
+	fv := float64(f32.Float32())
+
+	if math.IsNaN(fv) {
 		r.PushStack(runtime.ValueI32(0))
-	} else if f32 < math.MinInt32 {
+	} else if fv < math.MinInt32 {
 		r.PushStack(runtime.ValueI32(math.MinInt32))
-	} else if f32 > math.MaxInt32 {
+	} else if fv > math.MaxInt32 {
 		r.PushStack(runtime.ValueI32(math.MaxInt32))
 	} else {
-		r.PushStack(runtime.ValueI32(int32(f32)))
+		r.PushStack(runtime.ValueI32(int32(fv)))
 	}
 
 	return nil
@@ -99,14 +101,16 @@ func (*FCI32TruncSatF32U) Execute(r runtime.Runtime, f *runtime.Frame) error {
 		return runtime.ErrInvalidValue
 	}
 
-	if math.IsNaN(float64(f32)) {
+	fv := float64(f32.Float32())
+
+	if math.IsNaN(float64(fv)) {
 		r.PushStack(runtime.ValueI32(0))
-	} else if f32 < 0 {
+	} else if fv < 0 {
 		r.PushStack(runtime.ValueI32(0))
-	} else if f32 > math.MaxUint32 {
+	} else if fv > math.MaxUint32 {
 		r.PushStack(runtime.ValueI32(math.MaxInt32))
 	} else {
-		r.PushStack(runtime.ValueI32(uint32(f32)))
+		r.PushStack(runtime.ValueI32(uint32(fv)))
 	}
 
 	return nil
@@ -129,14 +133,16 @@ func (*FCI32TruncSatF64S) Execute(r runtime.Runtime, f *runtime.Frame) error {
 		return runtime.ErrInvalidValue
 	}
 
-	if math.IsNaN(float64(f64)) {
+	fv := f64.Float64()
+
+	if math.IsNaN(fv) {
 		r.PushStack(runtime.ValueI32(0))
-	} else if f64 < math.MinInt32 {
+	} else if fv < math.MinInt32 {
 		r.PushStack(runtime.ValueI32(math.MinInt32))
-	} else if f64 > math.MaxInt32 {
+	} else if fv > math.MaxInt32 {
 		r.PushStack(runtime.ValueI32(math.MaxInt32))
 	} else {
-		r.PushStack(runtime.ValueI32(int32(f64)))
+		r.PushStack(runtime.ValueI32(int32(fv)))
 	}
 
 	return nil
@@ -159,14 +165,16 @@ func (*FCI32TruncSatF64U) Execute(r runtime.Runtime, f *runtime.Frame) error {
 		return runtime.ErrInvalidValue
 	}
 
-	if math.IsNaN(float64(f64)) {
+	fv := f64.Float64()
+
+	if math.IsNaN(fv) {
 		r.PushStack(runtime.ValueI32(0))
-	} else if f64 < 0 {
+	} else if fv < 0 {
 		r.PushStack(runtime.ValueI32(0))
-	} else if f64 > math.MaxUint32 {
+	} else if fv > math.MaxUint32 {
 		r.PushStack(runtime.ValueI32(math.MaxInt32))
 	} else {
-		r.PushStack(runtime.ValueI32(uint32(f64)))
+		r.PushStack(runtime.ValueI32(uint32(fv)))
 	}
 
 	return nil
@@ -189,14 +197,16 @@ func (*FCI64TruncSatF32S) Execute(r runtime.Runtime, f *runtime.Frame) error {
 		return runtime.ErrInvalidValue
 	}
 
-	if math.IsNaN(float64(f32)) {
+	fv := float64(f32.Float32())
+
+	if math.IsNaN(fv) {
 		r.PushStack(runtime.ValueI64(0))
-	} else if f32 < math.MinInt64 {
+	} else if fv < math.MinInt64 {
 		r.PushStack(runtime.ValueI64(math.MinInt64))
-	} else if f32 > math.MaxInt64 {
+	} else if fv > math.MaxInt64 {
 		r.PushStack(runtime.ValueI64(math.MaxInt64))
 	} else {
-		r.PushStack(runtime.ValueI64(int64(f32)))
+		r.PushStack(runtime.ValueI64(int64(fv)))
 	}
 
 	return nil
@@ -219,14 +229,16 @@ func (*FCI64TruncSatF32U) Execute(r runtime.Runtime, f *runtime.Frame) error {
 		return runtime.ErrInvalidValue
 	}
 
-	if math.IsNaN(float64(f32)) {
+	fv := float64(f32.Float32())
+
+	if math.IsNaN(fv) {
 		r.PushStack(runtime.ValueI64(0))
-	} else if f32 < 0 {
+	} else if fv < 0 {
 		r.PushStack(runtime.ValueI64(0))
-	} else if f32 > math.MaxUint64 {
+	} else if fv > math.MaxUint64 {
 		r.PushStack(runtime.ValueI64(math.MaxInt64))
 	} else {
-		r.PushStack(runtime.ValueI64(uint64(f32)))
+		r.PushStack(runtime.ValueI64(uint64(fv)))
 	}
 
 	return nil
@@ -249,14 +261,16 @@ func (*FCI64TruncSatF64S) Execute(r runtime.Runtime, f *runtime.Frame) error {
 		return runtime.ErrInvalidValue
 	}
 
-	if math.IsNaN(float64(f64)) {
+	fv := f64.Float64()
+
+	if math.IsNaN(fv) {
 		r.PushStack(runtime.ValueI64(0))
-	} else if f64 < math.MinInt64 {
+	} else if fv < math.MinInt64 {
 		r.PushStack(runtime.ValueI64(math.MinInt64))
-	} else if f64 > math.MaxInt64 {
+	} else if fv > math.MaxInt64 {
 		r.PushStack(runtime.ValueI64(math.MaxInt64))
 	} else {
-		r.PushStack(runtime.ValueI64(int64(f64)))
+		r.PushStack(runtime.ValueI64(int64(fv)))
 	}
 
 	return nil
@@ -279,14 +293,16 @@ func (*FCI64TruncSatF64U) Execute(r runtime.Runtime, f *runtime.Frame) error {
 		return runtime.ErrInvalidValue
 	}
 
-	if math.IsNaN(float64(f64)) {
+	fv := f64.Float64()
+
+	if math.IsNaN(fv) {
 		r.PushStack(runtime.ValueI64(0))
-	} else if f64 < 0 {
+	} else if fv < 0 {
 		r.PushStack(runtime.ValueI64(0))
-	} else if f64 > math.MaxUint64 {
+	} else if fv > math.MaxUint64 {
 		r.PushStack(runtime.ValueI64(math.MaxInt64))
 	} else {
-		r.PushStack(runtime.ValueI64(uint64(f64)))
+		r.PushStack(runtime.ValueI64(uint64(fv)))
 	}
 
 	return nil
