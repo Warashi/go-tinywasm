@@ -19,24 +19,100 @@ type JSONWast struct {
 	SourceFilename string     `json:"source_filename"`
 	Commands       []Commands `json:"commands"`
 }
-type Args struct {
-	Type  string `json:"type"`
-	Value string `json:"value"`
+type Value struct {
+	Type  string          `json:"type"`
+	Value json.RawMessage `json:"value"`
 }
+
+func (a Value) RuntimeValue() typesRuntime.Value {
+	switch a.Type {
+	case "i32":
+		return typesRuntime.ValueI32(a.i32())
+	case "i64":
+		return typesRuntime.ValueI64(a.i64())
+	case "f32":
+		return typesRuntime.ValueF32(a.f32())
+	case "f64":
+		return typesRuntime.ValueF64(a.f64())
+	}
+	panic(fmt.Sprintf("unsupported value type %s", a.Type))
+}
+
+func (a Value) i32() int32 {
+	var s string
+	json.Unmarshal(a.Value, &s)
+	v, _ := strconv.ParseInt(s, 10, 32)
+	return int32(v)
+}
+
+func (a Value) i64() int64 {
+	var s string
+	json.Unmarshal(a.Value, &s)
+	v, _ := strconv.ParseInt(s, 10, 64)
+	return v
+}
+
+func (a Value) f32() float32 {
+	var s string
+	json.Unmarshal(a.Value, &s)
+	v, _ := strconv.ParseUint(s, 10, 32)
+	return convert[float32](v, 32)
+}
+
+func (a Value) f64() float64 {
+	var s string
+	json.Unmarshal(a.Value, &s)
+	v, _ := strconv.ParseUint(s, 10, 64)
+	return convert[float64](v, 64)
+}
+
+func (a Value) String() string {
+	switch a.Type {
+	case "i32":
+		return strconv.FormatInt(int64(a.i32()), 10)
+	case "i64":
+		return strconv.FormatInt(a.i64(), 10)
+	case "f32":
+		return strconv.FormatFloat(float64(a.f32()), 'f', -1, 32)
+	case "f64":
+		return strconv.FormatFloat(a.f64(), 'f', -1, 64)
+	}
+	panic(fmt.Sprintf("unsupported value type %s", a.Type))
+}
+
+func mustMarshalJSON(v interface{}) json.RawMessage {
+	b, err := json.Marshal(v)
+	if err != nil {
+		panic(fmt.Sprintf("failed to marshal json: %v", err))
+	}
+	return json.RawMessage(b)
+}
+
+func NewValue(v typesRuntime.Value) Value {
+	switch v := v.(type) {
+	case typesRuntime.ValueI32:
+		return Value{Type: "i32", Value: mustMarshalJSON(strconv.FormatInt(int64(v), 10))}
+	case typesRuntime.ValueI64:
+		return Value{Type: "i64", Value: mustMarshalJSON(strconv.FormatInt(int64(v), 10))}
+	case typesRuntime.ValueF32:
+		return Value{Type: "f32", Value: mustMarshalJSON(strconv.FormatUint(uint64(convert[uint32](v, 32)), 10))}
+	case typesRuntime.ValueF64:
+		return Value{Type: "f64", Value: mustMarshalJSON(strconv.FormatUint(convert[uint64](v, 64), 10))}
+	default:
+		panic(fmt.Sprintf("unsupported value type %T", v))
+	}
+}
+
 type Action struct {
-	Type  string `json:"type"`
-	Field string `json:"field"`
-	Args  []Args `json:"args"`
+	Type  string  `json:"type"`
+	Field string  `json:"field"`
+	Args  []Value `json:"args"`
 }
 
 func (a Action) String() string {
 	return fmt.Sprintf("%s %s %v", a.Type, a.Field, a.Args)
 }
 
-type Expected struct {
-	Type  string `json:"type"`
-	Value string `json:"value"`
-}
 type Commands struct {
 	Type       string     `json:"type"`
 	Line       int        `json:"line"`
@@ -51,6 +127,7 @@ func (c Commands) TestName() string {
 	return fmt.Sprintf("%s:%d(%s:%s)", c.Filename, c.Line, c.Type, c.Action)
 }
 
+type Expected = Value
 type Result = Expected
 
 func action(r *runtime.Runtime, a Action) ([]Result, error) {
@@ -76,32 +153,7 @@ func invoke(r *runtime.Runtime, a Action) ([]Result, error) {
 	args := make([]typesRuntime.Value, len(a.Args))
 
 	for i, arg := range a.Args {
-		switch arg.Type {
-		case "i32":
-			a, err := strconv.ParseInt(arg.Value, 10, 32)
-			if err != nil {
-				return nil, err
-			}
-			args[i] = typesRuntime.ValueI32(a)
-		case "i64":
-			a, err := strconv.ParseInt(arg.Value, 10, 64)
-			if err != nil {
-				return nil, err
-			}
-			args[i] = typesRuntime.ValueI64(a)
-		case "f32":
-			a, err := strconv.ParseFloat(arg.Value, 32)
-			if err != nil {
-				return nil, err
-			}
-			args[i] = typesRuntime.ValueF32(a)
-		case "f64":
-			a, err := strconv.ParseFloat(arg.Value, 64)
-			if err != nil {
-				return nil, err
-			}
-			args[i] = typesRuntime.ValueF64(a)
-		}
+		args[i] = arg.RuntimeValue()
 	}
 
 	v, err := r.Call(field, args...)
@@ -111,16 +163,7 @@ func invoke(r *runtime.Runtime, a Action) ([]Result, error) {
 
 	var result []Result
 	for _, v := range v {
-		switch v := v.(type) {
-		case typesRuntime.ValueI32:
-			result = append(result, Result{Type: "i32", Value: strconv.FormatInt(int64(v), 10)})
-		case typesRuntime.ValueI64:
-			result = append(result, Result{Type: "i64", Value: strconv.FormatInt(int64(v), 10)})
-		case typesRuntime.ValueF32:
-			result = append(result, Result{Type: "f32", Value: strconv.FormatUint(uint64(convert[uint32](v, 32)), 10)})
-		case typesRuntime.ValueF64:
-			result = append(result, Result{Type: "f64", Value: strconv.FormatUint(convert[uint64](v, 64), 10)})
-		}
+		result = append(result, NewValue(v))
 	}
 
 	return result, nil

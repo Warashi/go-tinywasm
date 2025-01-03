@@ -24,8 +24,7 @@
         };
         testsuite-json = pkgs.runCommand "json-testsuite" { } ''
           mkdir -p $out
-          for f in ${wasm-spec}/test/core/*.wast; do
-            echo "Converting $f to json"
+          find ${wasm-spec}/test/core -name '*.wast' | while read f; do
             ${pkgs.wabt}/bin/wast2json $f -o "$out/$(basename $f).json"
           done
         '';
