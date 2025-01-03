@@ -28,6 +28,11 @@ type Action struct {
 	Field string `json:"field"`
 	Args  []Args `json:"args"`
 }
+
+func (a Action) String() string {
+	return fmt.Sprintf("%s %s %v", a.Type, a.Field, a.Args)
+}
+
 type Expected struct {
 	Type  string `json:"type"`
 	Value string `json:"value"`
@@ -40,6 +45,10 @@ type Commands struct {
 	Expected   []Expected `json:"expected,omitempty"`
 	Text       string     `json:"text,omitempty"`
 	ModuleType string     `json:"module_type,omitempty"`
+}
+
+func (c Commands) TestName() string {
+	return fmt.Sprintf("%s:%d(%s:%s)", c.Filename, c.Line, c.Type, c.Action)
 }
 
 type Result = Expected
@@ -156,6 +165,8 @@ func setup(t *testing.T, p string) JSONWast {
 }
 
 func TestWasmium(t *testing.T) {
+	t.Parallel()
+
 	baseDir := cmp.Or(os.Getenv("WASMIUM_TEST_DIR"), ".")
 
 	for p := range filepathWalk(t, baseDir) {
@@ -164,30 +175,37 @@ func TestWasmium(t *testing.T) {
 		}
 
 		t.Run(p, func(t *testing.T) {
+			t.Parallel()
+
 			wast := setup(t, p)
 
 			var r *runtime.Runtime
 
 			for _, cmd := range wast.Commands {
-				switch cmd.Type {
-				case "module":
-					f, err := os.Open(filepath.Join(baseDir, cmd.Filename))
-					if err != nil {
-						t.Fatalf("failed to open file %s: %v", cmd.Filename, err)
+				t.Run(cmd.TestName(), func(t *testing.T) {
+					switch cmd.Type {
+					case "module":
+						f, err := os.Open(filepath.Join(baseDir, cmd.Filename))
+						if err != nil {
+							t.Fatalf("failed to open file %s: %v", cmd.Filename, err)
+						}
+						r, err = runtime.New(f)
+						if err != nil {
+							t.Fatalf("failed to create runtime: %v", err)
+						}
+					case "assert_return":
+						if r == nil {
+							t.Skip("module loading failed")
+						}
+						got, err := action(r, cmd.Action)
+						if err != nil {
+							t.Errorf("failed to execute action: %v", err)
+						}
+						if !reflect.DeepEqual(cmd.Expected, got) {
+							t.Errorf("assertion failed: expected %v, got %v", cmd.Expected, got)
+						}
 					}
-					r, err = runtime.New(f)
-					if err != nil {
-						t.Fatalf("failed to create runtime: %v", err)
-					}
-				case "assert_return":
-					got, err := action(r, cmd.Action)
-					if err != nil {
-						t.Errorf("failed to execute action: %v", err)
-					}
-					if !reflect.DeepEqual(cmd.Expected, got) {
-						t.Errorf("assertion failed: expected %v, got %v", cmd.Expected, got)
-					}
-				}
+				})
 			}
 		})
 	}
