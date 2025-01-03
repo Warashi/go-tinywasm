@@ -345,3 +345,34 @@ func (*Drop) Execute(r runtime.Runtime, f *runtime.Frame) error {
 	_, err := r.PopStack()
 	return err
 }
+
+type Select struct{}
+
+func (*Select) Opcode() opcode.Opcode { return opcode.OpcodeSelect }
+
+func (*Select) ReadOperandsFrom(io.Reader) error { return nil }
+
+func (*Select) Execute(r runtime.Runtime, f *runtime.Frame) error {
+	cond, err := r.PopStack()
+	if err != nil {
+		return fmt.Errorf("failed to pop stack: %w", err)
+	}
+
+	v2, err := r.PopStack()
+	if err != nil {
+		return fmt.Errorf("failed to pop stack: %w", err)
+	}
+
+	v1, err := r.PopStack()
+	if err != nil {
+		return fmt.Errorf("failed to pop stack: %w", err)
+	}
+
+	if cond.Bool() {
+		r.PushStack(v1)
+	} else {
+		r.PushStack(v2)
+	}
+
+	return nil
+}

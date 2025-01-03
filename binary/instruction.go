@@ -39,6 +39,8 @@ func fromOpcode(op opcode.Opcode) (inst, error) {
 		return new(instruction.Call), nil
 	case opcode.OpcodeDrop:
 		return new(instruction.Drop), nil
+	case opcode.OpcodeSelect:
+		return new(instruction.Select), nil
 	case opcode.OpcodeLocalGet:
 		return new(instruction.LocalGet), nil
 	case opcode.OpcodeLocalSet:
