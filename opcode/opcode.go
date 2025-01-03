@@ -277,6 +277,7 @@ const (
 	_
 )
 
+//go:generate stringer -type=OpcodeFC
 type OpcodeFC byte
 
 const (
