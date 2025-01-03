@@ -189,6 +189,8 @@ func TestWasmium(t *testing.T) {
 						if err != nil {
 							t.Fatalf("failed to open file %s: %v", cmd.Filename, err)
 						}
+						defer f.Close()
+
 						r, err = runtime.New(f)
 						if err != nil {
 							t.Fatalf("failed to create runtime: %v", err)
