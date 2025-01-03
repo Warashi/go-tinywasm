@@ -170,6 +170,23 @@ func (i *If) Execute(r runtime.Runtime, f *runtime.Frame) error {
 	return nil
 }
 
+type Else struct{}
+
+func (*Else) Opcode() opcode.Opcode { return opcode.OpcodeElse }
+
+func (*Else) ReadOperandsFrom(io.Reader) error { return nil }
+
+func (*Else) Execute(r runtime.Runtime, f *runtime.Frame) error {
+	label := f.Labels.Pop()
+	if label.Kind() != runtime.LabelKindIf {
+		return fmt.Errorf("unexpected label kind: %d", label.Kind())
+	}
+
+	f.ProgramCounter = label.ProgramCounter()
+
+	return nil
+}
+
 type End struct{}
 
 func (*End) Opcode() opcode.Opcode { return opcode.OpcodeEnd }
