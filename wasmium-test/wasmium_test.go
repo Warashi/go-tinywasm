@@ -269,6 +269,8 @@ func TestWasmium(t *testing.T) {
 						if !reflect.DeepEqual(cmd.Expected, got) {
 							t.Errorf("assertion failed: expected %v, got %v", cmd.Expected, got)
 						}
+					default:
+						t.Skip(fmt.Sprintf("type %s is not implemented yet", cmd.Type))
 					}
 				})
 			}
