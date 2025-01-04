@@ -266,6 +266,9 @@ func TestWasmium(t *testing.T) {
 						if err != nil {
 							t.Errorf("failed to execute action: %v", err)
 						}
+						if len(cmd.Expected) == 0 && len(got) == 0 {
+							return
+						}
 						if !reflect.DeepEqual(cmd.Expected, got) {
 							t.Errorf("assertion failed: expected %v, got %v", cmd.Expected, got)
 						}
